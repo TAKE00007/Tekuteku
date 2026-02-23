@@ -1,10 +1,3 @@
-//
-//  TekutekuUITests.swift
-//  TekutekuUITests
-//
-//  Created by 大竹駿 on 2026/02/23.
-//
-
 import XCTest
 
 final class TekutekuUITests: XCTestCase {

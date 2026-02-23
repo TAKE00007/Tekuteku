@@ -1,10 +1,3 @@
-//
-//  TekutekuTests.swift
-//  TekutekuTests
-//
-//  Created by 大竹駿 on 2026/02/23.
-//
-
 import Testing
 @testable import Tekuteku
 
