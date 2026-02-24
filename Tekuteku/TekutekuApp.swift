@@ -5,7 +5,7 @@ import SwiftData
 struct TekutekuApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SampleView()
         }
     }
 }
