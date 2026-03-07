@@ -1,18 +1,21 @@
-//
-//  HomeView.swift
-//  Tekuteku
-//
-//  Created by 大竹駿 on 2026/03/07.
-//
-
 import SwiftUI
+import ComposableArchitecture
 
 struct HomeView: View {
+    let store: StoreOf<HomeFeature>
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Text("マップを表示する")
+        }
+        .task {
+            store.send(.onAppear)
+        }
     }
 }
 
 #Preview {
-    HomeView()
+    HomeView(store: Store(initialState: HomeFeature.State(), reducer: {
+        HomeFeature()
+    }))
 }
