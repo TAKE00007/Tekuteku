@@ -1,8 +1,23 @@
-//
-//  SettingCore.swift
-//  Tekuteku
-//
-//  Created by 大竹駿 on 2026/03/07.
-//
+import SwiftUI
+import ComposableArchitecture
 
-import Foundation
+@Reducer
+struct SettingFeature {
+    @ObservableState
+    struct State: Equatable {
+        var settingValue = 0
+    }
+    
+    enum Action {
+        case onAppear
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                return .none
+            }
+        }
+    }
+}
