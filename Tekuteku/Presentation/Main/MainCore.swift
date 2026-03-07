@@ -5,18 +5,15 @@ import SwiftUI
 struct MainFeature {
     @ObservableState
     struct State: Equatable {
-        var route: Route = .map
-        var isInitial = false
+        var route: Route = .home
     }
     
     enum Action {
-        case map
-        case graph
-        case setting
+        case selectTab(Route)
     }
     
     enum Route: Equatable {
-        case map
+        case home
         case graph
         case setting
     }
@@ -24,14 +21,8 @@ struct MainFeature {
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
-            case .map:
-                state.route = .map
-                return .none
-            case .graph:
-                state.route = .graph
-                return .none
-            case .setting:
-                state.route = .setting
+            case .selectTab(let route):
+                state.route = route
                 return .none
             }
         }
