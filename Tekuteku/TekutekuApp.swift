@@ -6,11 +6,9 @@ import ComposableArchitecture
 struct TekutekuApp: App {
     var body: some Scene {
         WindowGroup {
-            CounterView(
-                store: Store(initialState: CounterFeature.State()) {
-                    CounterFeature()
-                }
-            )
+            AppView(store: Store(initialState: AppFeature.State(), reducer: {
+                AppFeature()
+            }))
         }
     }
 }
