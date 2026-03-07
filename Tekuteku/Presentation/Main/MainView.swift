@@ -11,21 +11,29 @@ struct MainView: View {
                 set: { store.send(.selectTab($0)) }
             )
         ) {
-            Text("Home")
-                .tag(MainFeature.Route.home)
-                .tabItem {
-                    Label("ホーム", systemImage: "house")
-                }
-            Text("Graph")
-                .tag(MainFeature.Route.graph)
-                .tabItem {
-                    Label("記録", systemImage: "chart.bar")
-                }
-            Text("Setting")
-                .tag(MainFeature.Route.setting)
-                .tabItem {
-                    Label("設定", systemImage: "gearshape")
-                }
+            HomeView(
+                store: store.scope(state: \.home, action: \.home)
+            )
+            .tag(MainFeature.Route.home)
+            .tabItem {
+                Label("ホーム", systemImage: "house")
+            }
+            
+            GraphView(
+                store: store.scope(state: \.graph, action: \.graph)
+            )
+            .tag(MainFeature.Route.graph)
+            .tabItem {
+                Label("記録", systemImage: "chart.bar")
+            }
+            
+            SettingView(
+                store: store.scope(state: \.setting, action: \.setting)
+            )
+            .tag(MainFeature.Route.setting)
+            .tabItem {
+                Label("設定", systemImage: "gearshape")
+            }
         }
     }
 }
