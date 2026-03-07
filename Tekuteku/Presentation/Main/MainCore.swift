@@ -5,33 +5,44 @@ import SwiftUI
 struct MainFeature {
     @ObservableState
     struct State: Equatable {
-        var route: Route = .map
-        var isInitial = false
+        var route: Route = .home
+        var home = HomeFeature.State()
+        var graph = GraphFeature.State()
+        var setting = SettingFeature.State()
     }
     
     enum Action {
-        case map
-        case graph
-        case setting
+        case selectTab(Route)
+        case home(HomeFeature.Action)
+        case graph(GraphFeature.Action)
+        case setting(SettingFeature.Action)
     }
     
     enum Route: Equatable {
-        case map
+        case home
         case graph
         case setting
     }
     
     var body: some Reducer<State, Action> {
+        Scope(state: \.home, action: \.home) {
+            HomeFeature()
+        }
+        
+        Scope(state: \.graph, action: \.graph) {
+            GraphFeature()
+        }
+        
+        Scope(state: \.setting, action: \.setting) {
+            SettingFeature()
+        }
+        
         Reduce { state, action in
             switch action {
-            case .map:
-                state.route = .map
+            case .selectTab(let route):
+                state.route = route
                 return .none
-            case .graph:
-                state.route = .graph
-                return .none
-            case .setting:
-                state.route = .setting
+            case .home, .graph, .setting:
                 return .none
             }
         }
