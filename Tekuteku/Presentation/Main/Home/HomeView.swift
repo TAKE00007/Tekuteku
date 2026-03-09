@@ -15,18 +15,40 @@ struct HomeView: View {
             Map(position: $position, scope: mapScope)
                 .mapStyle(.standard(elevation: .realistic))
                 .mapControls({
+                    // 標準の方を消す必要がある
                     MapCompass(scope: mapScope)
                         .mapControlVisibility(.hidden)
                 })
                 .overlay(alignment: .bottomTrailing) {
                     VStack {
-                        MapUserLocationButton(scope: mapScope)
                         MapCompass(scope: mapScope)
                             .mapControlVisibility(.visible)
+                        VStack(spacing: 8) {
+                            Button {
+                                print( "" )
+                            } label: {
+                                Image(systemName: "map.fill")
+                                    .foregroundStyle(.black)
+                                    .font(.title2)
+                                    .frame(width: 44, height: 44)
+                            }
+                            
+                            Button {
+                                position = .userLocation(followsHeading: false, fallback: .automatic)
+                            } label: {
+                                Image(systemName: "location.fill")
+                                    .foregroundStyle(.blue)
+                                    .font(.title2)
+                                    .frame(width: 44, height: 44)
+                            }
+                        }
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        
                         Button {
                             store.send(.tapWalking)
                         } label: {
                             Image(systemName: "figure.walk")
+                                .foregroundStyle(.black)
                                 .font(.title2)
                                 .padding(10)
                                 .background(.thinMaterial, in: Circle())
