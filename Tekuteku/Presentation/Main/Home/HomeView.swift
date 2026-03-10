@@ -42,7 +42,7 @@ struct HomeView: View {
                                     .frame(width: 44, height: 44)
                             }
                         }
-                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         
                         Button {
                             store.send(.tapWalking)
@@ -51,7 +51,7 @@ struct HomeView: View {
                                 .foregroundStyle(.black)
                                 .font(.title2)
                                 .padding(10)
-                                .background(.thinMaterial, in: Circle())
+                                .background(.thickMaterial, in: Circle())
                         }
                         
                     }
@@ -69,9 +69,7 @@ struct HomeView: View {
                 get: { store.isWalkingSheetPresented },
                 set: { store.send(.setWalkingSheet(isPresented: $0)) }
             )) {
-                VStack {
-                    Text("散歩ルート作成")
-                }
+                SliderView(store: store.scope(state: \.slider, action: \.slider))
                 .presentationDetents([.fraction(0.25), .medium])
             }
     }
@@ -88,8 +86,6 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     func requestPermission() {
         manager.requestWhenInUseAuthorization()
     }
-    
-    
 }
 
 #Preview {
