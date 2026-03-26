@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import MapKit
 
 struct SliderView: View {
     @Bindable var store: StoreOf<SliderFeature>
@@ -8,9 +9,9 @@ struct SliderView: View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
                 Text("\(Int(store.stepCount)) 歩")
-                Text("50 分")
-                Text("3.5 km")
-                Text("170 kcal")
+                Text("50 分") // TODO: 今後修正
+                Text("\(store.distance) km") // TODO: 距離は小数点第一位まで計算できるようにする
+                Text("170 kcal") // TODO: 今後修正
             }
             .font(.title3)
             .bold()
@@ -21,7 +22,7 @@ struct SliderView: View {
                 .padding(.horizontal, 28)
         
             PrimaryButton(title: "コース作成", variant: .primary) {
-                store.send(.tapCreateCourse)
+                store.send(.tapCreateCourse(distance: store.courceDistance))
             }
         }
     }
