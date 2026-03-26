@@ -9,10 +9,22 @@ struct HomeView: View {
     @State var position: MapCameraPosition = .automatic
     @StateObject private var locationManager = LocationManager()
     @Namespace var mapScope
+
+    var coursePolyline: MKPolyline? {
+        guard let course = store.course, course.route.count >=  2 else {
+            return nil
+        }
+        return course.route.mkPolyline
+    }
     
     var body: some View {
         ZStack {
-            Map(position: $position, scope: mapScope)
+            Map(position: $position, scope: mapScope) {
+                if let coursePolyline {
+                    MapPolyline(coursePolyline)
+                        .stroke(.blue, lineWidth: 5)
+                }
+            }
                 .mapStyle(.standard(elevation: .realistic))
                 .mapControls({
                     // 標準の方を消す必要がある
@@ -59,10 +71,21 @@ struct HomeView: View {
                     .buttonBorderShape(.circle)
                 }
                 .mapScope(mapScope)
+                .onChange(of: store.course?.id) { _, _ in
+                    guard let coursePolyline else { return }
+                    position = .rect(coursePolyline.boundingMapRect)
+                }
         }
         .task {
             locationManager.requestPermission()
+            locationManager.startUpdatingLocation()
             store.send(.onAppear)
+        }
+        .onReceive(locationManager.$currentLocation.compactMap { $0 } ) { location in
+            store.send(.currentLocationUpdated(location))
+            if position == .automatic {
+                position = .userLocation(followsHeading: false, fallback: .automatic)
+            }
         }
         .sheet(
             isPresented: Binding(
@@ -72,19 +95,6 @@ struct HomeView: View {
                 SliderView(store: store.scope(state: \.slider, action: \.slider))
                 .presentationDetents([.fraction(0.25), .medium])
             }
-    }
-}
-
-final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    let manager = CLLocationManager()
-    
-    override init() {
-        super.init()
-        manager.delegate = self
-    }
-    
-    func requestPermission() {
-        manager.requestWhenInUseAuthorization()
     }
 }
 
