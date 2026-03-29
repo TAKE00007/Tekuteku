@@ -25,7 +25,6 @@ struct HomeFeature {
         case setWalkingSheet(isPresented: Bool)
         case slider(SliderFeature.Action)
     }
-    
     @Dependency(\.walkingCourseService) var walkingCourseService
     @Dependency(\.locationServiceClient) var locationService
     
@@ -51,6 +50,7 @@ struct HomeFeature {
                         await send(.currentLocationUpdated(location))
                     }
                 }
+                .cancellable(id: "locationUpdates", cancelInFlight: true)
             case .tapWalking:
                 state.isWalkingSheetPresented = true
                 return .none
@@ -97,6 +97,7 @@ struct HomeFeature {
         }
     }
 }
+
 
 extension Array where Element == Coordinate {
     var mkPolyline: MKPolyline {
