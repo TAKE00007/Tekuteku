@@ -36,14 +36,13 @@ extension LocationServiceClient: DependencyKey {
                     case .authorizedAlways, .authorizedWhenInUse:
                         manager.startUpdatingLocation()
                     case .denied, .restricted:
-                        continuation.finish()
+                        break
                     @unknown default:
                         continuation.finish()
                     }
                     
                     continuation.onTermination = { _ in
                         manager.stopUpdatingLocation()
-
                     }
                 }
             }
@@ -83,7 +82,7 @@ private final class LocationManagerDelegateProxy: NSObject, CLLocationManagerDel
         case .authorizedAlways, .authorizedWhenInUse:
             manager.startUpdatingLocation()
         case .denied, .restricted:
-            didFinish()
+            manager.stopUpdatingLocation()
         case .notDetermined:
             break
         @unknown default:
