@@ -6,12 +6,20 @@ import MapKit
 struct HomeFeature {
     @ObservableState
     struct State: Equatable {
+        var displayState: DisplayState = .normal
         var position: MapCameraPosition = .automatic
         var course: WalkingCourse?
         var currentLocation: Coordinate?
         var isWalkingSheetPresented = false
         var slider = SliderFeature.State()
         var errorMessage: String?
+        
+    }
+    
+    enum DisplayState: Equatable {
+        case normal
+        case preview
+        case confirm
     }
     
     enum Action: BindableAction {
@@ -85,6 +93,7 @@ struct HomeFeature {
                 switch result {
                 case .success(let course):
                     state.course = course
+                    state.displayState = .preview
                     return .none
                 case .failure(let error):
                     state.errorMessage = error.message
