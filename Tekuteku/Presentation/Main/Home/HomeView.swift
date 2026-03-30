@@ -60,7 +60,7 @@ struct HomeView: View {
                         guard let coursePolyline = store.course?.route.mkPolyline else { return }
                         store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
                     }
-                    FooterView(stepCount: "5000", expectedMinute: "40", distance: "5.5", calories: "135", confirmAction: {}, unconfirmAction: {})
+                    FooterView(course: store.course!, confirmAction: {}, unconfirmAction: {})
                 }
                 .task {
                     store.send(.onAppear)
@@ -119,20 +119,18 @@ struct FlotingButtons: View {
 }
 
 struct FooterView: View {
-    let stepCount: String
-    let expectedMinute: String
-    let distance: String
-    let calories: String
+    let course: WalkingCourse
     let confirmAction: () -> Void
     let unconfirmAction: () -> Void
     
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
-                Text("\(stepCount) 歩")
-                Text("\(expectedMinute) 分")
+                Text("\(course.stepCount) 歩")
+                Text("\(course.expectedMinutes) 分")
+                let distance = course.distance.formatted(.number.precision(.fractionLength(1)))
                 Text("\(distance) km")
-                Text("\(calories) kcal")
+                Text("\(course.calories) kcal")
             }
             .font(.title3)
             .bold()
