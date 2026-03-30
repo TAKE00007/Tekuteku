@@ -94,6 +94,7 @@ struct HomeFeature {
                 case .success(let course):
                     state.course = course
                     state.displayState = .preview
+                    state.isWalkingSheetPresented = false
                     return .none
                 case .failure(let error):
                     state.errorMessage = error.message

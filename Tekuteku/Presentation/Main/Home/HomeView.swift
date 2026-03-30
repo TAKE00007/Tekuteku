@@ -7,70 +7,53 @@ struct HomeView: View {
     @Namespace var mapScope
     
     var body: some View {
-        Group {
-            switch store.displayState {
-            case .normal:
-                ZStack {
-                    Map(position: $store.position, scope: mapScope) {
-                        if let coursePolyline = store.course?.route.mkPolyline {
-                            MapPolyline(coursePolyline)
-                                .stroke(.blue, lineWidth: 5)
-                        }
-                    }
-                    .mapStyle(.standard(elevation: .realistic))
-                    .mapControls({
-                        // 標準の方を消す必要がある
-                        MapCompass(scope: mapScope)
-                            .mapControlVisibility(.hidden)
-                    })
-                    .overlay(alignment: .bottomTrailing) {
-                        FlotingButtons(
-                            mapScope: mapScope,
-                            updatePosition: { store.send(
-                                .updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
-                            },
-                            tapWalking: { store.send(.tapWalking) })
-                    }
-                    .mapScope(mapScope)
-                    .onChange(of: store.course?.id) { _, _ in
-                        guard let coursePolyline = store.course?.route.mkPolyline else { return }
-                        store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
-                    }
+        ZStack(alignment: .bottom) {
+            Map(position: $store.position, scope: mapScope) {
+                if let coursePolyline = store.course?.route.mkPolyline {
+                    MapPolyline(coursePolyline)
+                        .stroke(.blue, lineWidth: 5)
                 }
-                .task {
-                    store.send(.onAppear)
-                }
-                .sheet(
-                    isPresented: $store.isWalkingSheetPresented
-                ) {
-                    SliderView(store: store.scope(state: \.slider, action: \.slider))
-                        .presentationDetents([.fraction(0.25), .medium])
-                }
-            case .preview:
-                ZStack(alignment: .bottom) {
-                    Map(position: $store.position, scope: mapScope) {
-                        if let coursePolyline = store.course?.route.mkPolyline {
-                            MapPolyline(coursePolyline)
-                                .stroke(.blue, lineWidth: 5)
-                        }
-                    }
-                    .mapStyle(.standard(elevation: .realistic))
-                    .mapScope(mapScope)
-                    .onChange(of: store.course?.id) { _, _ in
-                        guard let coursePolyline = store.course?.route.mkPolyline else { return }
-                        store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
-                    }
-                    // TODO: confirmActionとunconfirmActionは別で実装する
-                    FooterView(course: store.course!, confirmAction: {}, unconfirmAction: {})
-                }
-                .task {
-                    store.send(.onAppear)
-                }
-            case .confirm:
-                EmptyView()
             }
-            
+            .mapStyle(.standard(elevation: .realistic))
+            .mapControls {
+                // 標準の方を消す必要がある
+                MapCompass(scope: mapScope)
+                    .mapControlVisibility(.hidden)
+            }
+            .mapScope(mapScope)
+            .onChange(of: store.course?.id) { _, _ in
+                guard let coursePolyline = store.course?.route.mkPolyline else { return }
+                store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
+            }
+
+            if store.displayState == .preview, let course = store.course {
+                // TODO: confirmActionとunconfirmActionは別で実装する
+                FooterView(course: course, confirmAction: {}, unconfirmAction: {})
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .overlay(alignment: .bottomTrailing) {
+            if store.displayState == .normal {
+                FlotingButtons(
+                    mapScope: mapScope,
+                    updatePosition: { store.send(
+                        .updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
+                    },
+                    tapWalking: { store.send(.tapWalking) }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .task {
+            store.send(.onAppear)
+        }
+        .sheet(
+            isPresented: $store.isWalkingSheetPresented
+        ) {
+            SliderView(store: store.scope(state: \.slider, action: \.slider))
+                .presentationDetents([.fraction(0.25), .medium])
+        }
+        .animation(.easeInOut(duration: 0.25), value: store.displayState)
     }
 }
 
