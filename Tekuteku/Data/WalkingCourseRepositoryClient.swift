@@ -16,8 +16,10 @@ extension WalkingCourseRepositoryClient: DependencyKey {
                 return WalkingCourse(
                     id: UUID(),
                     route: [start],
+                    stepCount: 5000,
                     distance: distance,
-                    expectedMinutes: Int(distance / 4000) // 歩く速度を時速4kmとする
+                    expectedMinutes: Int(distance / 4000), // 歩く速度を時速4kmとする
+                    calories: 135,
                 )
             }
         }
@@ -88,14 +90,18 @@ enum WalkingRouteBuilder {
         }
         
         let mergedRoute = mergeRoutes(bestRoutes)
-        let totalDistance = bestRoutes.map(\.distance).reduce(0, +)
-        let expectedMinutes = max(1, Int((totalDistance) / 4_000) * 60)
+        let totalDistance = bestRoutes.map(\.distance).reduce(0, +) / 1_000
+        let expectedMinutes = max(1, Int((totalDistance) / 4) * 60)
+        let stepCount = totalDistance * 1_000 / 0.7 // 1歩0.7m
+        let calories = stepCount * 0.04 // 1歩0.04kcal
         
         return WalkingCourse(
             id: UUID(),
             route: mergedRoute,
+            stepCount: Int(stepCount),
             distance: totalDistance,
-            expectedMinutes: expectedMinutes
+            expectedMinutes: expectedMinutes,
+            calories: Int(calories)
         )
     }
     

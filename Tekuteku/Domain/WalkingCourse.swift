@@ -4,8 +4,10 @@ import MapKit
 struct WalkingCourse: Equatable, Sendable {
     let id: UUID
     let route: [Coordinate]
+    let stepCount: Int
     let distance: Double
     let expectedMinutes: Int
+    let calories: Int
 }
 
 enum CourseRequest: Equatable, Sendable {
