@@ -60,6 +60,7 @@ struct HomeView: View {
                         guard let coursePolyline = store.course?.route.mkPolyline else { return }
                         store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
                     }
+                    // TODO: confirmActionとunconfirmActionは別で実装する
                     FooterView(course: store.course!, confirmAction: {}, unconfirmAction: {})
                 }
                 .task {
