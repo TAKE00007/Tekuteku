@@ -28,6 +28,8 @@ struct HomeFeature {
         case locationTask
         case updatePosition(MapCameraPosition)
         case tapWalking
+        case tapConfirm
+        case tapUnConfirm
         case currentLocationUpdated(CLLocationCoordinate2D)
         case courseResponse(Result<WalkingCourse, WalkingCourseError>)
         case setWalkingSheet(isPresented: Bool)
@@ -61,6 +63,14 @@ struct HomeFeature {
                 .cancellable(id: "locationUpdates", cancelInFlight: true)
             case .tapWalking:
                 state.isWalkingSheetPresented = true
+                return .none
+            case .tapUnConfirm:
+                state.course = nil
+                state.isWalkingSheetPresented = true
+                state.displayState = .normal
+                return .none
+            case .tapConfirm:
+                state.displayState = .confirm
                 return .none
             case .currentLocationUpdated(let location):
                 state.currentLocation = location.domain

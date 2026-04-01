@@ -27,8 +27,7 @@ struct HomeView: View {
             }
 
             if store.displayState == .preview, let course = store.course {
-                // TODO: confirmActionとunconfirmActionは別で実装する
-                FooterView(course: course, confirmAction: {}, unconfirmAction: {})
+                FooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
