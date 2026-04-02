@@ -1,7 +1,31 @@
 import SwiftUI
 
 struct PrimaryButton: View {
-    enum Variant { case primary, outline }
+    enum Variant {
+        case primary
+        case outline
+        case cancel
+        
+        fileprivate var textColor: Color {
+            switch self {
+            case .primary, .cancel:
+                return Color.white
+            case .outline:
+                return Color.navy
+            }
+        }
+        
+        fileprivate var backgroundColor: Color {
+            switch self {
+            case .primary:
+                return Color.navy
+            case .outline:
+                return Color.white
+            case .cancel:
+                return Color.red
+            }
+        }
+    }
     
     let title: String
     let variant: Variant
@@ -18,12 +42,12 @@ struct PrimaryButton: View {
             Text(title)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, minHeight:  48)
-                .foregroundStyle(variant == .primary ? .white : Color.navy)
-                .background(variant == .primary ? Color.navy : .clear)
+                .foregroundStyle(variant.textColor)
+                .background(variant.backgroundColor)
                 .cornerRadius(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(.navy), lineWidth: 1.0)
+                        .stroke(Color(variant.textColor), lineWidth: 1.0)
                 )
         }
         .padding(.horizontal, 28)

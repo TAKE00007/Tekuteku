@@ -25,23 +25,31 @@ struct HomeView: View {
                 guard let coursePolyline = store.course?.route.mkPolyline else { return }
                 store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
             }
-
-            if store.displayState == .preview, let course = store.course {
-                // TODO: confirmActionとunconfirmActionは別で実装する
-                FooterView(course: course, confirmAction: {}, unconfirmAction: {})
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
         }
         .overlay(alignment: .bottomTrailing) {
-            if store.displayState == .normal {
-                FlotingButtons(
-                    mapScope: mapScope,
-                    updatePosition: { store.send(
-                        .updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
-                    },
-                    tapWalking: { store.send(.tapWalking) }
-                )
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+            switch store.displayState {
+            case .normal:
+                flootingButtons
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            case .preview:
+                if let course = store.course {
+                    FooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                EmptyView()
+            case .confirm:
+                VStack {
+                    HStack {
+                        Spacer()
+                        flootingButtons
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                    if let course = store.course {
+                        ConfirmFooterView(course: course, cancelAction: { store.send(.tapCancel) })
+                    }
+                    
+                }
+
             }
         }
         .task {
@@ -55,19 +63,15 @@ struct HomeView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: store.displayState)
     }
-}
-
-struct FlotingButtons: View {
-    let mapScope: Namespace.ID
-    let updatePosition: () -> Void
-    let tapWalking: () -> Void
-    var body: some View {
+    
+    
+    private var flootingButtons: some View {
         VStack {
             MapCompass(scope: mapScope)
                 .mapControlVisibility(.visible)
             VStack(spacing: 8) {
                 Button {
-                    print( "" )
+                    print( "" ) //TODO: 地図の種類の選択をできるようにする
                 } label: {
                     Image(systemName: "map.fill")
                         .foregroundStyle(.black)
@@ -76,7 +80,7 @@ struct FlotingButtons: View {
                 }
                 
                 Button {
-                    updatePosition()
+                    store.send(.updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
                 } label: {
                     Image(systemName: "location.fill")
                         .foregroundStyle(.blue)
@@ -86,14 +90,16 @@ struct FlotingButtons: View {
             }
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             
-            Button {
-                tapWalking()
-            } label: {
-                Image(systemName: "figure.walk")
-                    .foregroundStyle(.black)
-                    .font(.title2)
-                    .padding(10)
-                    .background(.thickMaterial, in: Circle())
+            if store.displayState == .normal {
+                Button {
+                    store.send(.tapWalking)
+                } label: {
+                    Image(systemName: "figure.walk")
+                        .foregroundStyle(.black)
+                        .font(.title2)
+                        .padding(10)
+                        .background(.thickMaterial, in: Circle())
+                }
             }
             
         }
@@ -133,6 +139,34 @@ struct FooterView: View {
         .padding(.bottom, 16)
     }
 }
+
+struct ConfirmFooterView: View {
+    let course: WalkingCourse
+    let cancelAction: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Text("\(course.stepCount) 歩")
+                Text("\(course.expectedMinutes) 分")
+                let distance = course.distance.formatted(.number.precision(.fractionLength(1)))
+                Text("\(distance) km")
+                Text("\(course.calories) kcal")
+            }
+            .font(.title3)
+            .bold()
+            .padding()
+            
+            PrimaryButton(title: "経路を終了", variant: .cancel, action: cancelAction)
+        }
+        .padding(16)
+        .background(.white)
+        .cornerRadius(16)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+}
+
 
 #Preview {
     HomeView(store: Store(initialState: HomeFeature.State(), reducer: {
