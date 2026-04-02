@@ -25,16 +25,18 @@ struct HomeView: View {
                 guard let coursePolyline = store.course?.route.mkPolyline else { return }
                 store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
             }
-
-            if store.displayState == .preview, let course = store.course {
-                FooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
         }
         .overlay(alignment: .bottomTrailing) {
-            if store.displayState == .normal {
+            switch store.displayState {
+            case .normal, .confirm:
                 flootingButtons
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            case .preview:
+                if let course = store.course {
+                    FooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                EmptyView()
             }
         }
         .task {
@@ -56,7 +58,7 @@ struct HomeView: View {
                 .mapControlVisibility(.visible)
             VStack(spacing: 8) {
                 Button {
-                    print( "" )
+                    print( "" ) //TODO: 地図の種類の選択をできるようにする
                 } label: {
                     Image(systemName: "map.fill")
                         .foregroundStyle(.black)
