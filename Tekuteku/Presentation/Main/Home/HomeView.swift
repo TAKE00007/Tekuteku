@@ -33,13 +33,7 @@ struct HomeView: View {
         }
         .overlay(alignment: .bottomTrailing) {
             if store.displayState == .normal {
-                FlotingButtons(
-                    mapScope: mapScope,
-                    updatePosition: { store.send(
-                        .updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
-                    },
-                    tapWalking: { store.send(.tapWalking) }
-                )
+                flootingButtons
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
@@ -54,13 +48,9 @@ struct HomeView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: store.displayState)
     }
-}
-
-struct FlotingButtons: View {
-    let mapScope: Namespace.ID
-    let updatePosition: () -> Void
-    let tapWalking: () -> Void
-    var body: some View {
+    
+    
+    private var flootingButtons: some View {
         VStack {
             MapCompass(scope: mapScope)
                 .mapControlVisibility(.visible)
@@ -75,7 +65,7 @@ struct FlotingButtons: View {
                 }
                 
                 Button {
-                    updatePosition()
+                    store.send(.updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
                 } label: {
                     Image(systemName: "location.fill")
                         .foregroundStyle(.blue)
@@ -86,7 +76,7 @@ struct FlotingButtons: View {
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             
             Button {
-                tapWalking()
+                store.send(.tapWalking)
             } label: {
                 Image(systemName: "figure.walk")
                     .foregroundStyle(.black)
