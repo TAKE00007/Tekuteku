@@ -28,7 +28,7 @@ struct HomeView: View {
         }
         .overlay(alignment: .bottomTrailing) {
             switch store.displayState {
-            case .normal, .confirm:
+            case .normal:
                 flootingButtons
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             case .preview:
@@ -37,6 +37,19 @@ struct HomeView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 EmptyView()
+            case .confirm:
+                VStack {
+                    HStack {
+                        Spacer()
+                        flootingButtons
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                    if let course = store.course {
+                        ConfirmFooterView(course: course, cancelAction: { store.send(.tapCancel) })
+                    }
+                    
+                }
+
             }
         }
         .task {
@@ -77,14 +90,16 @@ struct HomeView: View {
             }
             .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             
-            Button {
-                store.send(.tapWalking)
-            } label: {
-                Image(systemName: "figure.walk")
-                    .foregroundStyle(.black)
-                    .font(.title2)
-                    .padding(10)
-                    .background(.thickMaterial, in: Circle())
+            if store.displayState == .normal {
+                Button {
+                    store.send(.tapWalking)
+                } label: {
+                    Image(systemName: "figure.walk")
+                        .foregroundStyle(.black)
+                        .font(.title2)
+                        .padding(10)
+                        .background(.thickMaterial, in: Circle())
+                }
             }
             
         }
@@ -124,6 +139,34 @@ struct FooterView: View {
         .padding(.bottom, 16)
     }
 }
+
+struct ConfirmFooterView: View {
+    let course: WalkingCourse
+    let cancelAction: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Text("\(course.stepCount) 歩")
+                Text("\(course.expectedMinutes) 分")
+                let distance = course.distance.formatted(.number.precision(.fractionLength(1)))
+                Text("\(distance) km")
+                Text("\(course.calories) kcal")
+            }
+            .font(.title3)
+            .bold()
+            .padding()
+            
+            PrimaryButton(title: "経路を終了", variant: .cancel, action: cancelAction)
+        }
+        .padding(16)
+        .background(.white)
+        .cornerRadius(16)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+}
+
 
 #Preview {
     HomeView(store: Store(initialState: HomeFeature.State(), reducer: {
