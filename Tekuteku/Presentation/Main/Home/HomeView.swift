@@ -23,7 +23,7 @@ struct HomeView: View {
             .mapScope(mapScope)
             .onChange(of: store.course?.id) { _, _ in
                 guard let coursePolyline = store.course?.route.mkPolyline else { return }
-                store.send(.updatePosition(.rect(coursePolyline.boundingMapRect)))
+                store.send(.updatePosition(.rect(coursePolyline.boundingMapRect.padded(by: 0.15))))
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -105,6 +105,14 @@ struct HomeView: View {
         }
         .padding( .trailing, 10)
         .buttonBorderShape(.circle)
+    }
+}
+
+private extension MKMapRect {
+    func padded(by ratio: Double) -> MKMapRect {
+        let dx = size.width * ratio
+        let dy = size.height * ratio
+        return insetBy(dx: -dx, dy: -dy)
     }
 }
 
