@@ -9,6 +9,8 @@ struct HomeView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             Map(position: $store.position, scope: mapScope) {
+                UserAnnotation()
+                
                 if let coursePolyline = store.course?.route.mkPolyline {
                     MapPolyline(coursePolyline)
                         .stroke(.blue, lineWidth: 5)
@@ -80,7 +82,10 @@ struct HomeView: View {
                 }
                 
                 Button {
-                    store.send(.updatePosition(.userLocation(followsHeading: false, fallback: .automatic)))
+                    if let centerCoordinate = store.currentLocation?.clLocationCoordinate2D {
+                        let camera = MapCamera(centerCoordinate: centerCoordinate, distance: 1_000)
+                        store.send(.updatePosition(.camera(camera)))
+                    }
                 } label: {
                     Image(systemName: "location.fill")
                         .foregroundStyle(.blue)
