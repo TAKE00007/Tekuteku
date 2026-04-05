@@ -35,7 +35,7 @@ struct HomeView: View {
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             case .preview:
                 if let course = store.course {
-                    FooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
+                    SelectFooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 EmptyView()
@@ -117,66 +117,6 @@ private extension MKMapRect {
         return insetBy(dx: -dx, dy: -dy)
     }
 }
-
-struct FooterView: View {
-    let course: WalkingCourse
-    let confirmAction: () -> Void
-    let unconfirmAction: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                Text("\(course.stepCount) 歩")
-                Text("\(course.expectedMinutes) 分")
-                let distance = course.distance.formatted(.number.precision(.fractionLength(1)))
-                Text("\(distance) km")
-                Text("\(course.calories) kcal")
-            }
-            .font(.title3)
-            .bold()
-            .padding()
-            
-            HStack(spacing: 8) {
-                PrimaryButton(title: "再検索する", variant: .outline, action: unconfirmAction)
-                PrimaryButton(title: "このコース", variant: .primary, action: confirmAction)
-                
-            }
-        }
-        .padding(16)
-        .background(.white)
-        .cornerRadius(16)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
-    }
-}
-
-struct ConfirmFooterView: View {
-    let course: WalkingCourse
-    let cancelAction: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                Text("\(course.stepCount) 歩")
-                Text("\(course.expectedMinutes) 分")
-                let distance = course.distance.formatted(.number.precision(.fractionLength(1)))
-                Text("\(distance) km")
-                Text("\(course.calories) kcal")
-            }
-            .font(.title3)
-            .bold()
-            .padding()
-            
-            PrimaryButton(title: "経路を終了", variant: .cancel, action: cancelAction)
-        }
-        .padding(16)
-        .background(.white)
-        .cornerRadius(16)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
-    }
-}
-
 
 #Preview {
     HomeView(store: Store(initialState: HomeFeature.State(), reducer: {
