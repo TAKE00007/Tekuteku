@@ -12,6 +12,7 @@ struct HomeFeature {
         var course: WalkingCourse?
         var currentLocation: Coordinate?
         var isWalkingSheetPresented = false
+        var isMapChangeSheetPreseted = false
         var slider = SliderFeature.State()
         var errorMessage: String?
         let cameraDistance: Double = 1_000
@@ -29,6 +30,9 @@ struct HomeFeature {
         case locationTask
         case updatePosition(MapCameraPosition)
         case tapUserLocation
+        case tapChangeMap
+        case tapStandard
+        case tapHybrid
         case tapWalking
         case tapConfirm
         case tapUnConfirm
@@ -71,6 +75,15 @@ struct HomeFeature {
                 return .run { send in
                     await send(.updatePosition(.camera(camera)))
                 }
+            case .tapChangeMap:
+                state.isMapChangeSheetPreseted = true
+                return .none
+            case .tapStandard:
+                state.mapStyleOption = .standard
+                return .none
+            case .tapHybrid:
+                state.mapStyleOption = .hybrid
+                return .none
             case .tapWalking:
                 state.isWalkingSheetPresented = true
                 return .none
