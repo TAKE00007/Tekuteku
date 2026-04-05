@@ -5,6 +5,14 @@ enum MapStyleOption: Equatable {
     case standard
     case hybrid
     
+    var name: String {
+        switch self {
+        case .standard:
+            return "スタンダード"
+        case .hybrid:
+            return "航空写真"
+        }
+    }
     var mapStyle: MapStyle {
         switch self {
         case .standard:
