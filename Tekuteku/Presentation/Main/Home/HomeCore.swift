@@ -13,7 +13,7 @@ struct HomeFeature {
         var isWalkingSheetPresented = false
         var slider = SliderFeature.State()
         var errorMessage: String?
-        
+        let cameraDistance: Double = 1_000
     }
     
     enum DisplayState: Equatable {
@@ -27,6 +27,7 @@ struct HomeFeature {
         case onAppear
         case locationTask
         case updatePosition(MapCameraPosition)
+        case tapUserLocation
         case tapWalking
         case tapConfirm
         case tapUnConfirm
@@ -62,6 +63,12 @@ struct HomeFeature {
                     }
                 }
                 .cancellable(id: "locationUpdates", cancelInFlight: true)
+            case .tapUserLocation:
+                guard let centerCoordinate = state.currentLocation?.clLocationCoordinate2D else { return .none }
+                let camera = MapCamera(centerCoordinate: centerCoordinate, distance: state.cameraDistance)
+                return .run { send in
+                    await send(.updatePosition(.camera(camera)))
+                }
             case .tapWalking:
                 state.isWalkingSheetPresented = true
                 return .none
@@ -69,14 +76,20 @@ struct HomeFeature {
                 state.course = nil
                 state.isWalkingSheetPresented = true
                 state.displayState = .normal
-                return .none
+                return .run { send in
+                    await send(.tapUserLocation)
+                }
             case .tapConfirm:
                 state.displayState = .confirm
-                return .none
+                return .run { send in
+                    await send(.tapUserLocation)
+                }
             case .tapCancel:
                 state.course = nil
                 state.displayState = .normal
-                return .none
+                return .run { send in
+                    await send(.tapUserLocation)
+                }
             case .currentLocationUpdated(let location):
                 state.currentLocation = location.domain
                 if state.position == .automatic {
