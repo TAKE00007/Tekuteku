@@ -76,18 +76,20 @@ struct HomeFeature {
                 state.course = nil
                 state.isWalkingSheetPresented = true
                 state.displayState = .normal
-                return .none
+                return .run { send in
+                    await send(.tapUserLocation)
+                }
             case .tapConfirm:
                 state.displayState = .confirm
-                guard let centerCoordinate = state.currentLocation?.clLocationCoordinate2D else { return .none }
-                let camera = MapCamera(centerCoordinate: centerCoordinate, distance: state.cameraDistance)
                 return .run { send in
-                    await send(.updatePosition(.camera(camera)))
+                    await send(.tapUserLocation)
                 }
             case .tapCancel:
                 state.course = nil
                 state.displayState = .normal
-                return .none
+                return .run { send in
+                    await send(.tapUserLocation)
+                }
             case .currentLocationUpdated(let location):
                 state.currentLocation = location.domain
                 if state.position == .automatic {
