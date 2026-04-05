@@ -82,10 +82,7 @@ struct HomeView: View {
                 }
                 
                 Button {
-                    if let centerCoordinate = store.currentLocation?.clLocationCoordinate2D {
-                        let camera = MapCamera(centerCoordinate: centerCoordinate, distance: 1_000)
-                        store.send(.updatePosition(.camera(camera)))
-                    }
+                    store.send(.tapUserLocation)
                 } label: {
                     Image(systemName: "location.fill")
                         .foregroundStyle(.blue)

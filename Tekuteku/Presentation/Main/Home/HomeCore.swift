@@ -27,6 +27,7 @@ struct HomeFeature {
         case onAppear
         case locationTask
         case updatePosition(MapCameraPosition)
+        case tapUserLocation
         case tapWalking
         case tapConfirm
         case tapUnConfirm
@@ -62,6 +63,12 @@ struct HomeFeature {
                     }
                 }
                 .cancellable(id: "locationUpdates", cancelInFlight: true)
+            case .tapUserLocation:
+                guard let centerCoordinate = state.currentLocation?.clLocationCoordinate2D else { return .none }
+                let camera = MapCamera(centerCoordinate: centerCoordinate, distance: state.cameraDistance)
+                return .run { send in
+                    await send(.updatePosition(.camera(camera)))
+                }
             case .tapWalking:
                 state.isWalkingSheetPresented = true
                 return .none
