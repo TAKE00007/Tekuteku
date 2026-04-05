@@ -13,7 +13,7 @@ struct HomeFeature {
         var isWalkingSheetPresented = false
         var slider = SliderFeature.State()
         var errorMessage: String?
-        
+        let cameraDistance: Double = 1_000
     }
     
     enum DisplayState: Equatable {
@@ -72,7 +72,11 @@ struct HomeFeature {
                 return .none
             case .tapConfirm:
                 state.displayState = .confirm
-                return .none
+                guard let centerCoordinate = state.currentLocation?.clLocationCoordinate2D else { return .none }
+                let camera = MapCamera(centerCoordinate: centerCoordinate, distance: state.cameraDistance)
+                return .run { send in
+                    await send(.updatePosition(.camera(camera)))
+                }
             case .tapCancel:
                 state.course = nil
                 state.displayState = .normal
