@@ -13,12 +13,13 @@ extension WalkingCourseRepositoryClient: DependencyKey {
         createCourse: { request in
             switch request {
             case let .byDistance(start, distance):
+                let courseDistance = distance / 1_000
                 return WalkingCourse(
                     id: UUID(),
                     route: [start],
                     stepCount: 5000,
-                    distance: distance / 1_000,
-                    expectedMinutes: Int(distance / 4000), // 歩く速度を時速4kmとする
+                    distance: courseDistance,
+                    expectedMinutes: Int(courseDistance / 4000), // 歩く速度を時速4kmとする
                     calories: 135,
                 )
             }
