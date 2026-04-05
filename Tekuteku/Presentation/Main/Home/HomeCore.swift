@@ -31,8 +31,6 @@ struct HomeFeature {
         case updatePosition(MapCameraPosition)
         case tapUserLocation
         case tapChangeMap
-        case tapStandard
-        case tapHybrid
         case tapWalking
         case tapConfirm
         case tapUnConfirm
@@ -77,12 +75,6 @@ struct HomeFeature {
                 }
             case .tapChangeMap:
                 state.isMapChangeSheetPreseted = true
-                return .none
-            case .tapStandard:
-                state.mapStyleOption = .standard
-                return .none
-            case .tapHybrid:
-                state.mapStyleOption = .hybrid
                 return .none
             case .tapWalking:
                 state.isWalkingSheetPresented = true
