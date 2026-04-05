@@ -6,6 +6,7 @@ import MapKit
 struct HomeFeature {
     @ObservableState
     struct State: Equatable {
+        var mapStyleOption: MapStyleOption = .standard
         var displayState: DisplayState = .normal
         var position: MapCameraPosition = .automatic
         var course: WalkingCourse?
@@ -32,6 +33,7 @@ struct HomeFeature {
         case tapConfirm
         case tapUnConfirm
         case tapCancel
+        case changeMapStyle(MapStyleOption)
         case currentLocationUpdated(CLLocationCoordinate2D)
         case courseResponse(Result<WalkingCourse, WalkingCourseError>)
         case setWalkingSheet(isPresented: Bool)
@@ -90,6 +92,9 @@ struct HomeFeature {
                 return .run { send in
                     await send(.tapUserLocation)
                 }
+            case .changeMapStyle(let mapStyle):
+                state.mapStyleOption = mapStyle
+                return .none
             case .currentLocationUpdated(let location):
                 state.currentLocation = location.domain
                 if state.position == .automatic {

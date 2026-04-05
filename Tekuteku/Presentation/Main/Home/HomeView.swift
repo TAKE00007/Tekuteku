@@ -16,7 +16,7 @@ struct HomeView: View {
                         .stroke(.blue, lineWidth: 5)
                 }
             }
-            .mapStyle(.standard(elevation: .realistic))
+            .mapStyle(store.mapStyleOption.mapStyle)
             .mapControls {
                 // 標準の方を消す必要がある
                 MapCompass(scope: mapScope)
