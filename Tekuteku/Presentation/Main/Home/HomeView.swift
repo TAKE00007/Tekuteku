@@ -66,10 +66,7 @@ struct HomeView: View {
         .sheet(
             isPresented: $store.isMapChangeSheetPreseted
         ) {
-            MapKindSelectView(
-                tapStandard: { store.send(.tapStandard) },
-                tapHybrid: { store.send(.tapHybrid) }
-            )
+            MapKindSelectView(selectedMapStyle: store.mapStyleOption, onSelect: { store.send(.changeMapStyle($0)) })
             .presentationDetents([.fraction(0.25), .medium])
         }
         .animation(.easeInOut(duration: 0.25), value: store.displayState)
@@ -116,57 +113,6 @@ struct HomeView: View {
         }
         .padding( .trailing, 10)
         .buttonBorderShape(.circle)
-    }
-}
-
-struct MapKindSelectView: View {
-    let tapStandard: () -> Void
-    let tapHybrid: () -> Void
-    @State var isStandard: Bool = true
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("地図モード")
-                .font(.title2)
-                .bold()
-                .padding(.top, 16)
-            HStack(spacing: 16) {
-                VStack {
-                    Image(.standardMap)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .padding(5)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(isStandard ? .blue : .clear, lineWidth: 3)
-                        }
-                        .onTapGesture {
-                            tapStandard()
-                            isStandard = true
-                        }
-                    Text("スタンダード")
-                }
-                VStack {
-                    Image(.hybridMap)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .padding(5)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(!isStandard ? .blue : .clear, lineWidth: 3)
-                        }
-                        .onTapGesture {
-                            tapHybrid()
-                            isStandard = false
-                        }
-
-                    Text("航空写真")
-                }
-            }
-        }
     }
 }
 

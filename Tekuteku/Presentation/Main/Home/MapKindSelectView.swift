@@ -1,5 +1,4 @@
 import SwiftUI
-import ComposableArchitecture
 
 struct MapKindSelectView: View {
     let selectedMapStyle: MapStyleOption
@@ -12,39 +11,8 @@ struct MapKindSelectView: View {
                 .bold()
                 .padding(.top, 16)
             HStack(spacing: 16) {
-                VStack {
-                    Image(.standardMap)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .padding(5)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(selectedMapStyle == .standard ? .blue : .clear, lineWidth: 3)
-                        }
-                        .onTapGesture {
-                            onSelect(.standard)
-                        }
-                    Text("スタンダード")
-                }
-                VStack {
-                    Image(.hybridMap)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .padding(5)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(selectedMapStyle == .hybrid ? .blue : .clear, lineWidth: 3)
-                        }
-                        .onTapGesture {
-                            onSelect(.hybrid)
-                        }
-
-                    Text("航空写真")
-                }
+                MapKindView(image: .standardMap, mapStyle: .standard, selectedMapStyle: selectedMapStyle, onSelect: { onSelect($0) })
+                MapKindView(image: .hybridMap, mapStyle: .hybrid, selectedMapStyle: selectedMapStyle, onSelect: { onSelect($0) })
             }
         }
     }
@@ -52,4 +20,30 @@ struct MapKindSelectView: View {
 
 #Preview {
     MapKindSelectView(selectedMapStyle: .standard, onSelect: {_ in })
+}
+
+private struct MapKindView: View {
+    let image: ImageResource
+    let mapStyle: MapStyleOption
+    let selectedMapStyle: MapStyleOption
+    let onSelect: (MapStyleOption) -> Void
+    var body: some View {
+        VStack {
+            Image(image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding(5)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(selectedMapStyle == mapStyle ? .blue : .clear, lineWidth: 3)
+                }
+                .onTapGesture {
+                    onSelect(mapStyle)
+                }
+
+            Text(mapStyle.name)
+        }
+    }
 }
