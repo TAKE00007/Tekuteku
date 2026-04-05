@@ -6,11 +6,13 @@ import MapKit
 struct HomeFeature {
     @ObservableState
     struct State: Equatable {
+        var mapStyleOption: MapStyleOption = .standard
         var displayState: DisplayState = .normal
         var position: MapCameraPosition = .automatic
         var course: WalkingCourse?
         var currentLocation: Coordinate?
         var isWalkingSheetPresented = false
+        var isMapChangeSheetPreseted = false
         var slider = SliderFeature.State()
         var errorMessage: String?
         let cameraDistance: Double = 1_000
@@ -28,10 +30,12 @@ struct HomeFeature {
         case locationTask
         case updatePosition(MapCameraPosition)
         case tapUserLocation
+        case tapChangeMap
         case tapWalking
         case tapConfirm
         case tapUnConfirm
         case tapCancel
+        case changeMapStyle(MapStyleOption)
         case currentLocationUpdated(CLLocationCoordinate2D)
         case courseResponse(Result<WalkingCourse, WalkingCourseError>)
         case setWalkingSheet(isPresented: Bool)
@@ -69,6 +73,9 @@ struct HomeFeature {
                 return .run { send in
                     await send(.updatePosition(.camera(camera)))
                 }
+            case .tapChangeMap:
+                state.isMapChangeSheetPreseted = true
+                return .none
             case .tapWalking:
                 state.isWalkingSheetPresented = true
                 return .none
@@ -90,6 +97,9 @@ struct HomeFeature {
                 return .run { send in
                     await send(.tapUserLocation)
                 }
+            case .changeMapStyle(let mapStyle):
+                state.mapStyleOption = mapStyle
+                return .none
             case .currentLocationUpdated(let location):
                 state.currentLocation = location.domain
                 if state.position == .automatic {
