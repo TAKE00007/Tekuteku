@@ -17,7 +17,7 @@ extension WalkingCourseRepositoryClient: DependencyKey {
                     id: UUID(),
                     route: [start],
                     stepCount: 5000,
-                    distance: distance,
+                    distance: distance / 1_000,
                     expectedMinutes: Int(distance / 4000), // 歩く速度を時速4kmとする
                     calories: 135,
                 )
