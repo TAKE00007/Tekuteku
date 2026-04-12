@@ -28,7 +28,7 @@ extension WeatherRepositoryClient {
         
         let (data, _) = try await URLSession.shared.data(from: url)
         let response = try JSONDecoder().decode(WeatherResponse.self, from: data)
-        guard let weatherData = response.toDomain() else { throw NSError() }
+        let weatherData = response.toDomain()
         
         return weatherData
     }
