@@ -7,6 +7,18 @@ struct WeatherRepositoryClient: Sendable {
 
 extension WeatherRepositoryClient: DependencyKey {
     static let liveValue: Self = .live
+    
+    static var testValue: Self = .init(
+        fetchWeatherData: { _ in
+            return WeatherData(
+                weather: .sunny,
+                temperature: 18.5,
+                apparentTemperature: 20.0,
+                windSpeed: 10,
+                windDirection: 180.0
+            )
+        }
+    )
 }
 
 extension DependencyValues {
