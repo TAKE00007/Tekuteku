@@ -9,13 +9,16 @@ struct HomeFeature {
         var mapStyleOption: MapStyleOption = .standard
         var displayState: DisplayState = .normal
         var position: MapCameraPosition = .automatic
+        let cameraDistance: Double = 1_000
         var course: WalkingCourse?
         var currentLocation: Coordinate?
+        var weatherData: WeatherData?
+        var errorMessage: String?
+        
         var isWalkingSheetPresented = false
         var isMapChangeSheetPreseted = false
+
         var slider = SliderFeature.State()
-        var errorMessage: String?
-        let cameraDistance: Double = 1_000
     }
     
     enum DisplayState: Equatable {
@@ -26,9 +29,13 @@ struct HomeFeature {
     
     enum Action: BindableAction {
         case binding(BindingAction<State>)
+        
         case onAppear
         case locationTask
         case updatePosition(MapCameraPosition)
+        case currentLocationUpdated(CLLocationCoordinate2D)
+        case fetchWeather(Coordinate)
+        
         case tapUserLocation
         case tapChangeMap
         case tapWalking
@@ -36,13 +43,16 @@ struct HomeFeature {
         case tapUnConfirm
         case tapCancel
         case changeMapStyle(MapStyleOption)
-        case currentLocationUpdated(CLLocationCoordinate2D)
+
         case courseResponse(Result<WalkingCourse, WalkingCourseError>)
+        case weatherResponse(Result<WeatherData, Error>) //TODO: 天気取得用のエラーを考える
+        
         case setWalkingSheet(isPresented: Bool)
         case slider(SliderFeature.Action)
     }
     @Dependency(\.walkingCourseService) var walkingCourseService
     @Dependency(\.locationServiceClient) var locationService
+    @Dependency(\.weatherServiceClient) var weatherService
     
     var body: some Reducer<State, Action> {
         BindingReducer()
@@ -67,6 +77,24 @@ struct HomeFeature {
                     }
                 }
                 .cancellable(id: "locationUpdates", cancelInFlight: true)
+            case .currentLocationUpdated(let location):
+                let coordinate = location.domain
+                state.currentLocation = coordinate
+                if state.position == .automatic {
+                    state.position = .userLocation(followsHeading: false, fallback: .automatic)
+                }
+                return .run { send in
+                    await send(.fetchWeather(coordinate))
+                }
+            case .fetchWeather(let coordinate):
+                return .run { send in
+                    do {
+                        let weatherData = try await weatherService.fetchWeatherData(coordinate)
+                        await send(.weatherResponse(.success(weatherData)))
+                    } catch {
+                        await send(.weatherResponse(.failure(error)))
+                    }
+                }
             case .tapUserLocation:
                 guard let centerCoordinate = state.currentLocation?.clLocationCoordinate2D else { return .none }
                 let camera = MapCamera(centerCoordinate: centerCoordinate, distance: state.cameraDistance)
@@ -100,12 +128,6 @@ struct HomeFeature {
             case .changeMapStyle(let mapStyle):
                 state.mapStyleOption = mapStyle
                 return .none
-            case .currentLocationUpdated(let location):
-                state.currentLocation = location.domain
-                if state.position == .automatic {
-                    state.position = .userLocation(followsHeading: false, fallback: .automatic)
-                }
-                return .none
             case .setWalkingSheet(let isPresented):
                 state.isWalkingSheetPresented = isPresented
                 return .none
@@ -136,6 +158,15 @@ struct HomeFeature {
                     return .none
                 case .failure(let error):
                     state.errorMessage = error.message
+                    return .none
+                }
+            case .weatherResponse(let result):
+                switch result {
+                case .success(let weatherData):
+                    state.weatherData = weatherData
+                    return .none
+                case .failure(let error):
+                    // TODO: 後で処理かく
                     return .none
                 }
             case .updatePosition(let position):
