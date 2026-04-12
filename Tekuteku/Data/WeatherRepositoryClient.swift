@@ -36,13 +36,17 @@ extension WeatherRepositoryClient {
             URLQueryItem(name: "longitude", value: "\(coordinate.longitude)"),
             URLQueryItem(name: "current", value: "temperature_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code")
         ]
-        guard let url = components.url else { throw NSError() }
+        guard let url = components.url else { throw WeatherError.failCreateURL }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
-        let response = try JSONDecoder().decode(WeatherResponse.self, from: data)
-        let weatherData = response.toDomain()
-        
-        return weatherData
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(WeatherResponse.self, from: data)
+            let weatherData = response.toDomain()
+            
+            return weatherData
+        } catch {
+            throw WeatherError.failLoadWeatherData
+        }
     }
 }
 

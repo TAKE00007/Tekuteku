@@ -45,7 +45,7 @@ struct HomeFeature {
         case changeMapStyle(MapStyleOption)
 
         case courseResponse(Result<WalkingCourse, WalkingCourseError>)
-        case weatherResponse(Result<WeatherData, Error>) //TODO: 天気取得用のエラーを考える
+        case weatherResponse(Result<WeatherData, WeatherError>)
         
         case setWalkingSheet(isPresented: Bool)
         case slider(SliderFeature.Action)
@@ -91,8 +91,10 @@ struct HomeFeature {
                     do {
                         let weatherData = try await weatherService.fetchWeatherData(coordinate)
                         await send(.weatherResponse(.success(weatherData)))
-                    } catch {
+                    } catch let error as WeatherError {
                         await send(.weatherResponse(.failure(error)))
+                    } catch {
+                        await send(.weatherResponse(.failure(WeatherError.unknown)))
                     }
                 }
             case .tapUserLocation:
@@ -166,7 +168,7 @@ struct HomeFeature {
                     state.weatherData = weatherData
                     return .none
                 case .failure(let error):
-                    // TODO: 後で処理かく
+                    state.errorMessage = error.message
                     return .none
                 }
             case .updatePosition(let position):
