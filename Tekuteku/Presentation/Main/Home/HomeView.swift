@@ -28,6 +28,18 @@ struct HomeView: View {
                 store.send(.updatePosition(.rect(coursePolyline.boundingMapRect.padded(by: 0.15))))
             }
         }
+        .overlay(alignment: .topLeading) {
+            if let weatherData = store.weatherData {
+                let temperature = weatherData.temperature.formatted(.number.precision(.fractionLength(1)))
+                HStack {
+                    Image(systemName: weatherData.weather.imageName)
+                    Text("\(temperature)℃")
+                }
+                .padding(8)
+                .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.leading, 16)
+            }
+        }
         .overlay(alignment: .bottomTrailing) {
             switch store.displayState {
             case .normal:
