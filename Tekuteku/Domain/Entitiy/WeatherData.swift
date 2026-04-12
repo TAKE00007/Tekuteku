@@ -13,6 +13,17 @@ enum Weather: Equatable, Sendable {
     case sunny
     case cloud
     case rainy
+    
+    var imageName: String {
+        switch self {
+        case .sunny:
+            return "sun.max.fill"
+        case .cloud:
+            return "cloud.fill"
+        case .rainy:
+            return "cloud.rain.fill"
+        }
+    }
 }
 
 /// 下記にWMOコードが書いてある
