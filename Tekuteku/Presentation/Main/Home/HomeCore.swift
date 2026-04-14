@@ -8,6 +8,7 @@ struct HomeFeature {
     struct State: Equatable {
         var mapStyleOption: MapStyleOption = .standard
         var displayState: DisplayState = .normal
+        var isFollowingUser: Bool = false
         var position: MapCameraPosition = .automatic
         let cameraDistance: Double = 1_000
         var course: WalkingCourse?
@@ -83,6 +84,9 @@ struct HomeFeature {
                 if state.position == .automatic {
                     state.position = .userLocation(followsHeading: false, fallback: .automatic)
                 }
+                if state.isFollowingUser {
+                    state.position = .camera(MapCamera(centerCoordinate: location, distance: state.cameraDistance))
+                }
                 return .run { send in
                     await send(.fetchWeather(coordinate))
                 }
@@ -118,12 +122,14 @@ struct HomeFeature {
                 }
             case .tapConfirm:
                 state.displayState = .confirm
+                state.isFollowingUser = true
                 return .run { send in
                     await send(.tapUserLocation)
                 }
             case .tapCancel:
                 state.course = nil
                 state.displayState = .normal
+                state.isFollowingUser = false
                 return .run { send in
                     await send(.tapUserLocation)
                 }
