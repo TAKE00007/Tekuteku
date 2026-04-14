@@ -47,8 +47,12 @@ struct HomeView: View {
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             case .preview:
                 if let course = store.course {
-                    SelectFooterView(course: course, confirmAction: { store.send(.tapConfirm) }, unconfirmAction: { store.send(.tapUnConfirm) })
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    SelectFooterView(
+                        course: course,
+                        confirmAction: { store.send(.tapConfirm) },
+                        unconfirmAction: { store.send(.tapUnConfirm) }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 EmptyView()
             case .confirm:
