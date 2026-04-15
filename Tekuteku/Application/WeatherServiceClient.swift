@@ -29,11 +29,44 @@ extension DependencyValues {
 }
 
 extension WeatherServiceClient {
-    static let live: Self = .init(
-        fetchWeatherData: { coordinate in
-            @Dependency(\.weatherRepository) var repository
-            let weatherData = try await repository.fetchWeatherData(coordinate)
+    static let live: Self = {
+        let cache = WeatherCache()
+
+        return .init(
+            fetchWeatherData: { coordinate in
+                @Dependency(\.weatherRepository) var repository
+                
+                let now = Date()
+                
+                if let weatherCache = await cache.cacheValid(now: now, expiration: 60 * 60) {
+                    return weatherCache
+                }
+                
+                let weatherData = try await repository.fetchWeatherData(coordinate)
+                await cache.save(fetchedAt: now, weatherData: weatherData)
+
+                return weatherData
+            }
+        )
+    }()
+}
+
+private actor WeatherCache {
+    private var lastFetchedAt: Date?
+    private var weatherData: WeatherData?
+    
+    func cacheValid(now: Date, expiration: TimeInterval) -> WeatherData? {
+        guard let lastFetchedAt, let weatherData else { return nil }
+        
+        if now.timeIntervalSince(lastFetchedAt) < expiration {
             return weatherData
+        } else {
+            return nil
         }
-    )
+    }
+    
+    func save(fetchedAt: Date, weatherData: WeatherData) {
+        self.lastFetchedAt = fetchedAt
+        self.weatherData = weatherData
+    }
 }
