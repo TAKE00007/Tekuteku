@@ -8,9 +8,10 @@ struct HomeFeature {
     struct State: Equatable {
         var mapStyleOption: MapStyleOption = .standard
         var displayState: DisplayState = .normal
-        var isFollowingUser: Bool = false
         var position: MapCameraPosition = .automatic
+        var isFollowingUser: Bool = false
         let cameraDistance: Double = 1_000
+
         var course: WalkingCourse?
         var currentLocation: Coordinate?
         var weatherData: WeatherData?
@@ -78,6 +79,9 @@ struct HomeFeature {
                     }
                 }
                 .cancellable(id: "locationUpdates", cancelInFlight: true)
+            case .updatePosition(let position):
+                state.position = position
+                return .none
             case .currentLocationUpdated(let location):
                 let coordinate = location.domain
                 state.currentLocation = coordinate
@@ -101,6 +105,7 @@ struct HomeFeature {
                         await send(.weatherResponse(.failure(WeatherError.unknown)))
                     }
                 }
+
             case .tapUserLocation:
                 guard let centerCoordinate = state.currentLocation?.clLocationCoordinate2D else { return .none }
                 let camera = MapCamera(centerCoordinate: centerCoordinate, distance: state.cameraDistance)
@@ -136,9 +141,7 @@ struct HomeFeature {
             case .changeMapStyle(let mapStyle):
                 state.mapStyleOption = mapStyle
                 return .none
-            case .setWalkingSheet(let isPresented):
-                state.isWalkingSheetPresented = isPresented
-                return .none
+
             case .slider(.tapCreateCourse(let distance)):
                 guard let currentLocation = state.currentLocation else {
                     state.errorMessage = "現在地を取得できていません"
@@ -155,8 +158,7 @@ struct HomeFeature {
                         await send(.courseResponse(.failure(.unknown)))
                     }
                 }
-            case .slider:
-                return .none
+
             case .courseResponse(let result):
                 switch result {
                 case .success(let course):
@@ -177,8 +179,11 @@ struct HomeFeature {
                     state.errorMessage = error.message
                     return .none
                 }
-            case .updatePosition(let position):
-                state.position = position
+
+            case .setWalkingSheet(let isPresented):
+                state.isWalkingSheetPresented = isPresented
+                return .none
+            case .slider:
                 return .none
             }
         }
