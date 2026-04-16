@@ -22,7 +22,6 @@ struct HomeView: View {
                 MapCompass(scope: mapScope)
                     .mapControlVisibility(.hidden)
             }
-            .mapScope(mapScope)
             .onChange(of: store.course?.id) { _, _ in
                 guard let coursePolyline = store.course?.route.mkPolyline else { return }
                 store.send(.updatePosition(.rect(coursePolyline.boundingMapRect.padded(by: 0.15))))
@@ -86,6 +85,7 @@ struct HomeView: View {
             .presentationDetents([.fraction(0.25), .medium])
         }
         .animation(.easeInOut(duration: 0.25), value: store.displayState)
+        .mapScope(mapScope)
     }
     
     
