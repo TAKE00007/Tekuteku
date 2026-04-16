@@ -38,12 +38,12 @@ extension WeatherServiceClient {
                 
                 let now = Date()
                 
-                if let weatherCache = await cache.cacheValid(now: now, expiration: 60 * 60) {
+                if let weatherCache = await cache.cachedWeatherDataIfValid(now: now, currentLocation: coordinate, expirationTime: 60 * 60, expirationDistance: 1_000) {
                     return weatherCache
                 }
                 
                 let weatherData = try await repository.fetchWeatherData(coordinate)
-                await cache.save(fetchedAt: now, weatherData: weatherData)
+                await cache.save(fetchedAt: now, fetchedLocation: coordinate, weatherData: weatherData)
 
                 return weatherData
             }
@@ -53,20 +53,22 @@ extension WeatherServiceClient {
 
 private actor WeatherCache {
     private var lastFetchedAt: Date?
+    private var lastFetchedLocation: Coordinate?
     private var weatherData: WeatherData?
     
-    func cacheValid(now: Date, expiration: TimeInterval) -> WeatherData? {
-        guard let lastFetchedAt, let weatherData else { return nil }
-        
-        if now.timeIntervalSince(lastFetchedAt) < expiration {
+    func cachedWeatherDataIfValid(now: Date, currentLocation: Coordinate,expirationTime: TimeInterval, expirationDistance: Double) -> WeatherData? {
+        guard let lastFetchedAt, let weatherData, let lastFetchedLocation else { return nil }
+        let distance = currentLocation.distance(to: lastFetchedLocation)
+        if now.timeIntervalSince(lastFetchedAt) < expirationTime && distance < expirationDistance {
             return weatherData
         } else {
             return nil
         }
     }
     
-    func save(fetchedAt: Date, weatherData: WeatherData) {
+    func save(fetchedAt: Date, fetchedLocation: Coordinate, weatherData: WeatherData) {
         self.lastFetchedAt = fetchedAt
+        self.lastFetchedLocation = fetchedLocation
         self.weatherData = weatherData
     }
 }
