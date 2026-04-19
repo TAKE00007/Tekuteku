@@ -89,6 +89,7 @@ struct HomeFeature {
                 if let courses = state.courses {
                     state.course = courses.first { $0.id == id }
                 }
+                state.selectedCourseID = id
                 return .none
             case .currentLocationUpdated(let location):
                 let coordinate = location.domain
@@ -174,6 +175,7 @@ struct HomeFeature {
                 case .success(let courses):
                     state.courses = courses
                     state.course = courses.first
+                    state.selectedCourseID = courses.first?.id
                     state.displayState = .preview
                     state.isWalkingSheetPresented = false
                     return .none
