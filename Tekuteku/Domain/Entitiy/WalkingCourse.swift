@@ -1,7 +1,7 @@
 import Foundation
 import MapKit
 
-struct WalkingCourse: Equatable, Sendable {
+struct WalkingCourse: Identifiable, Equatable, Sendable {
     let id: UUID
     let route: [Coordinate]
     let stepCount: Int

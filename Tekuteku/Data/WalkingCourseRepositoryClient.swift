@@ -3,7 +3,7 @@ import Foundation
 import MapKit
 
 struct WalkingCourseRepositoryClient: Sendable {
-    var createCourse: @Sendable (CourseRequest) async throws -> WalkingCourse
+    var createCourse: @Sendable (CourseRequest) async throws -> [WalkingCourse]
 }
 
 extension WalkingCourseRepositoryClient: DependencyKey {
@@ -14,14 +14,14 @@ extension WalkingCourseRepositoryClient: DependencyKey {
             switch request {
             case let .byDistance(start, distance):
                 let courseDistance = distance / 1_000
-                return WalkingCourse(
+                return [WalkingCourse(
                     id: UUID(),
                     route: [start],
                     stepCount: 5000,
                     distance: courseDistance,
                     expectedMinutes: Int(courseDistance / 4000), // 歩く速度を時速4kmとする
                     calories: 135,
-                )
+                )]
             }
         }
     )
@@ -39,71 +39,69 @@ extension WalkingCourseRepositoryClient {
         createCourse: { request in
             switch request {
             case let .byDistance(start, distance):
-                return try await WalkingRouteBuilder.makeWalkingCourse(from: start.clLocationCoordinate2D, distanceMeters: distance)
+                return try await WalkingRouteBuilder.makeWalkingCourses(from: start.clLocationCoordinate2D, distanceMeters: distance)
             }
         }
     )
 }
 
 enum WalkingRouteBuilder {
-    static func makeWalkingCourse(
+    static func makeWalkingCourses(
         from start: CLLocationCoordinate2D,
         distanceMeters: Double
-    ) async throws -> WalkingCourse {
-        let bearingDegreesList: [Double] = [0.0, 270.0]
-        let scales: [Double] = [0.7, 0.8]
+    ) async throws -> [WalkingCourse] {
+        let bearingDegreesList: [Double] = [0.0, 90.0, 180.0, 270.0] // スタートする方向
+        let scale: Double = 0.7 // 1km先の地点でも歩くと長くなるので、短めにして補正する
         
-        var bestRoutes: [MKRoute] = []
-        var bestDiff = Double.greatestFiniteMagnitude
+        var walkingCourses: [WalkingCourse] = []
         
-        for scale in scales {
-            let edgeDistance = (distanceMeters * scale) / 4
+        let edgeDistance = (distanceMeters * scale) / 4
+        
+        for bearingDegree in bearingDegreesList {
+            let firstPoint = fetchPoint(from: start, distanceMeters: edgeDistance, bearingDegrees: bearingDegree)
+            let secondPoint = fetchPoint(from: firstPoint, distanceMeters: edgeDistance, bearingDegrees: bearingDegree + 90)
+            let thirdPoint = fetchPoint(from: secondPoint, distanceMeters: edgeDistance, bearingDegrees: bearingDegree + 180)
             
-            for bearingDegree in bearingDegreesList {
-                let firstPoint = fetchPoint(from: start, distanceMeters: edgeDistance, bearingDegrees: bearingDegree)
-                let secondPoint = fetchPoint(from: firstPoint, distanceMeters: edgeDistance, bearingDegrees: bearingDegree + 90)
-                let thirdPoint = fetchPoint(from: secondPoint, distanceMeters: edgeDistance, bearingDegrees: bearingDegree + 180)
+            do {
+                async let firstRoute = fetchWalkingRoute(from: start, to: firstPoint)
+                async let secondRoute = fetchWalkingRoute(from: firstPoint, to: secondPoint)
+                async let thirdRoute = fetchWalkingRoute(from: secondPoint, to: thirdPoint)
+                async let finalRoute = fetchWalkingRoute(from: thirdPoint, to: start)
                 
-                do {
-                    async let firstRoute = fetchWalkingRoute(from: start, to: firstPoint)
-                    async let secondRoute = fetchWalkingRoute(from: firstPoint, to: secondPoint)
-                    async let thirdRoute = fetchWalkingRoute(from: secondPoint, to: thirdPoint)
-                    async let finalRoute = fetchWalkingRoute(from: thirdPoint, to: start)
-                    
-                    let routes = try await [firstRoute, secondRoute, thirdRoute, finalRoute]
-                    let totalDistance = routes.map(\.distance).reduce(0, +)
-                    let diff = abs(totalDistance - distanceMeters)
-                    
-                    if diff < bestDiff {
-                        bestDiff = diff
-                        bestRoutes = routes
-                    }
-                } catch let error as WalkingCourseError{
-                    throw error
-                } catch {
-                    throw WalkingCourseError.mapKitError(error.localizedDescription)
-                }
+                let routes = try await [firstRoute, secondRoute, thirdRoute, finalRoute]
+                
+                let mergeRoute = mergeRoutes(routes)
+                let totalDistance = routes.map(\.distance).reduce(0, +) / 1_000
+                let expectedMinutes = max(1, Int((totalDistance) / 4) * 60)
+                let stepCount = totalDistance * 1_000 / 0.7 // 1歩0.7m
+                let calories = stepCount * 0.04 // 1歩0.04kcal
+                
+                let walkingCourse = WalkingCourse(
+                    id: UUID(),
+                    route: mergeRoute,
+                    stepCount: Int(stepCount),
+                    distance: totalDistance,
+                    expectedMinutes: expectedMinutes,
+                    calories: Int(calories)
+                )
+                
+                walkingCourses.append(walkingCourse)
+            } catch let error as WalkingCourseError{
+                throw error
+            } catch {
+                throw WalkingCourseError.mapKitError(error.localizedDescription)
             }
         }
-        
-        guard !bestRoutes.isEmpty else {
+
+        guard !walkingCourses.isEmpty else {
             throw WalkingCourseError.routeNotFound
         }
         
-        let mergedRoute = mergeRoutes(bestRoutes)
-        let totalDistance = bestRoutes.map(\.distance).reduce(0, +) / 1_000
-        let expectedMinutes = max(1, Int((totalDistance) / 4) * 60)
-        let stepCount = totalDistance * 1_000 / 0.7 // 1歩0.7m
-        let calories = stepCount * 0.04 // 1歩0.04kcal
+        let sortedWalkingCourses = walkingCourses.sorted {
+            abs(($0.distance * 1_000) - distanceMeters) < abs(($1.distance * 1_000) - distanceMeters)
+        }
         
-        return WalkingCourse(
-            id: UUID(),
-            route: mergedRoute,
-            stepCount: Int(stepCount),
-            distance: totalDistance,
-            expectedMinutes: expectedMinutes,
-            calories: Int(calories)
-        )
+        return sortedWalkingCourses
     }
     
     static func mergeRoutes(_ routes: [MKRoute]) -> [Coordinate] {

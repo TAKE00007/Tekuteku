@@ -45,15 +45,44 @@ struct HomeView: View {
                 flootingButtons
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             case .preview:
-                if let course = store.course {
-                    SelectFooterView(
-                        course: course,
-                        confirmAction: { store.send(.tapConfirm) },
-                        unconfirmAction: { store.send(.tapUnConfirm) }
-                    )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                VStack {
+                    if let courses = store.courses {
+                        HStack(spacing: 8) {
+                            ForEach(Array(courses.enumerated()), id: \.element.id) { index, course in
+                                let isSelected = store.selectedCourseID == course.id
+                                Button {
+                                    store.send(.updateCourseID(course.id))
+                                } label: {
+                                    Text("コース\(index + 1)")
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(isSelected ? Color.white : Color.primary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background {
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .fill(isSelected ? Color.navy : Color.white)
+                                        }
+                                        .overlay {
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .stroke(
+                                                    isSelected ? Color.navy : Color.clear,
+                                                    lineWidth: 1
+                                                )
+                                        }
+                                }
+                            }
+                        }
+                    }
+                    if let course = store.course {
+                        SelectFooterView(
+                            course: course,
+                            confirmAction: { store.send(.tapConfirm) },
+                            unconfirmAction: { store.send(.tapUnConfirm) }
+                        )
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    EmptyView()
                 }
-                EmptyView()
             case .confirm:
                 VStack {
                     HStack {
@@ -135,8 +164,15 @@ struct HomeView: View {
 private extension MKMapRect {
     func padded(by ratio: Double) -> MKMapRect {
         let dx = size.width * ratio
-        let dy = size.height * ratio
-        return insetBy(dx: -dx, dy: -dy)
+        let topPadding = size.height * ratio
+        let bottomPadding = size.height * (ratio + 0.3)
+        
+        return MKMapRect(
+            x: origin.x - dx,
+            y: origin.y - topPadding,
+            width: size.width + dx * 2,
+            height: size.height + topPadding + bottomPadding
+        )
     }
 }
 

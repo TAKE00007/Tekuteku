@@ -11,7 +11,9 @@ struct HomeFeature {
         var position: MapCameraPosition = .automatic
         var isFollowingUser: Bool = false
         let cameraDistance: Double = 1_000
+        var selectedCourseID: UUID? = nil
 
+        var courses: [WalkingCourse]?
         var course: WalkingCourse?
         var currentLocation: Coordinate?
         var weatherData: WeatherData?
@@ -35,6 +37,7 @@ struct HomeFeature {
         case onAppear
         case locationTask
         case updatePosition(MapCameraPosition)
+        case updateCourseID(UUID)
         case currentLocationUpdated(CLLocationCoordinate2D)
         case fetchWeather(Coordinate)
         
@@ -46,7 +49,7 @@ struct HomeFeature {
         case tapCancel
         case changeMapStyle(MapStyleOption)
 
-        case courseResponse(Result<WalkingCourse, WalkingCourseError>)
+        case courseResponse(Result<[WalkingCourse], WalkingCourseError>)
         case weatherResponse(Result<WeatherData, WeatherError>)
         
         case setWalkingSheet(isPresented: Bool)
@@ -81,6 +84,12 @@ struct HomeFeature {
                 .cancellable(id: "locationUpdates", cancelInFlight: true)
             case .updatePosition(let position):
                 state.position = position
+                return .none
+            case .updateCourseID(let id):
+                if let courses = state.courses {
+                    state.course = courses.first { $0.id == id }
+                }
+                state.selectedCourseID = id
                 return .none
             case .currentLocationUpdated(let location):
                 let coordinate = location.domain
@@ -119,6 +128,7 @@ struct HomeFeature {
                 state.isWalkingSheetPresented = true
                 return .none
             case .tapUnConfirm:
+                state.courses = nil
                 state.course = nil
                 state.isWalkingSheetPresented = true
                 state.displayState = .normal
@@ -132,6 +142,7 @@ struct HomeFeature {
                     await send(.tapUserLocation)
                 }
             case .tapCancel:
+                state.courses = nil
                 state.course = nil
                 state.displayState = .normal
                 state.isFollowingUser = false
@@ -149,9 +160,9 @@ struct HomeFeature {
                 }
                 return .run { send in
                     do {
-                        let course = try await walkingCourseService.createCourse(.byDistance(start: currentLocation, distance: distance)
+                        let courses = try await walkingCourseService.createCourse(.byDistance(start: currentLocation, distance: distance)
                         )
-                        await send(.courseResponse(.success(course)))
+                        await send(.courseResponse(.success(courses)))
                     } catch let error as WalkingCourseError {
                         await send(.courseResponse(.failure(error)))
                     } catch {
@@ -161,8 +172,10 @@ struct HomeFeature {
 
             case .courseResponse(let result):
                 switch result {
-                case .success(let course):
-                    state.course = course
+                case .success(let courses):
+                    state.courses = courses
+                    state.course = courses.first
+                    state.selectedCourseID = courses.first?.id
                     state.displayState = .preview
                     state.isWalkingSheetPresented = false
                     return .none
