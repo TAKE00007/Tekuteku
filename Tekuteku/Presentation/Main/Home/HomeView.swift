@@ -26,11 +26,6 @@ struct HomeView: View {
                 guard let coursePolyline = store.course?.route.mkPolyline else { return }
                 store.send(.updatePosition(.rect(coursePolyline.boundingMapRect.padded(by: 0.15))))
             }
-            .onChange(of: store.selectedCourseID) { _, newValue in
-                if let id = newValue {
-                    store.send(.updateCourseID(id))                    
-                }
-            }
         }
         .overlay(alignment: .topLeading) {
             if let weatherData = store.weatherData {
