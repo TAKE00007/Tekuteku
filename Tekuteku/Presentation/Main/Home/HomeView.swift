@@ -164,8 +164,15 @@ struct HomeView: View {
 private extension MKMapRect {
     func padded(by ratio: Double) -> MKMapRect {
         let dx = size.width * ratio
-        let dy = size.height * ratio
-        return insetBy(dx: -dx, dy: -dy)
+        let topPadding = size.height * ratio
+        let bottomPadding = size.height * (ratio + 0.3)
+        
+        return MKMapRect(
+            x: origin.x - dx,
+            y: origin.y - topPadding,
+            width: size.width + dx * 2,
+            height: size.height + topPadding + bottomPadding
+        )
     }
 }
 
