@@ -26,6 +26,11 @@ struct HomeView: View {
                 guard let coursePolyline = store.course?.route.mkPolyline else { return }
                 store.send(.updatePosition(.rect(coursePolyline.boundingMapRect.padded(by: 0.15))))
             }
+            .onChange(of: store.selectedCourseID) { _, newValue in
+                if let id = newValue {
+                    store.send(.updateCourseID(id))                    
+                }
+            }
         }
         .overlay(alignment: .topLeading) {
             if let weatherData = store.weatherData {
@@ -37,6 +42,16 @@ struct HomeView: View {
                 .padding(8)
                 .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .padding(.leading, 16)
+            }
+        }
+        .overlay(alignment: .top) {
+            if store.displayState == .preview, let courses = store.courses {
+                Picker("Course", selection: $store.selectedCourseID) {
+                    ForEach(courses) { course in
+                        Text(course.id.uuidString)
+                            .tag(course.id)
+                    }
+                }
             }
         }
         .overlay(alignment: .bottomTrailing) {
