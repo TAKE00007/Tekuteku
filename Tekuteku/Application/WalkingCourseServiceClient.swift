@@ -2,7 +2,7 @@ import Foundation
 import Dependencies
 
 struct WalkingCourseServiceClient: Sendable {
-    var createCourse: @MainActor @Sendable (CourseRequest) async throws -> WalkingCourse
+    var createCourse: @MainActor @Sendable (CourseRequest) async throws -> [WalkingCourse]
 }
 
 extension WalkingCourseServiceClient: DependencyKey {
@@ -28,13 +28,13 @@ extension WalkingCourseServiceClient {
         createCourse: { request in
             @Dependency(\.walkingCourseRepository) var repository
             
-            let course = try await repository.createCourse(request)
+            let courses = try await repository.createCourse(request)
             
-            guard !course.route.isEmpty else {
+            guard !courses.isEmpty else {
                 throw WalkingCourseError.routeNotFound
             }
             
-            return course
+            return courses
         }
     )
 }
