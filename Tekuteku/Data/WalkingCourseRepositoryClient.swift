@@ -56,33 +56,40 @@ enum WalkingRouteBuilder {
         
         let edgeDistance = (distanceMeters * scale) / 4
         
-        let walkingCourses = await withTaskGroup(of: WalkingCourse?.self) { group in
+        let result = await withTaskGroup(of: Result<WalkingCourse, WalkingCourseError>.self) { group in
             for bearingDegree in bearingDegreesList {
                 group.addTask {
                     do {
                         let walkingCourse = try await makeWalkingCourse(from: start, edgeDistance: edgeDistance, bearingDegree: bearingDegree)
-                        return walkingCourse
+                        return .success(walkingCourse)
+                    } catch let error as WalkingCourseError {
+                        return .failure(error)
                     } catch {
-                        return nil
+                        return .failure(.mapKitError(error.localizedDescription))
                     }
                 }
             }
                     
             var walkingCourses: [WalkingCourse] = []
+            var failure: WalkingCourseError?
             
-            for await walkingCourse in group {
-                if let walkingCourse = walkingCourse {
+            for await result in group {
+                switch result {
+                case let .success(walkingCourse):
                     walkingCourses.append(walkingCourse)
+                case let .failure(error):
+                    failure = error
                 }
             }
-            return walkingCourses
+            
+            return (walkingCourses, failure)
         }
         
-        guard !walkingCourses.isEmpty else {
-            throw WalkingCourseError.routeNotFound
+        guard !result.0.isEmpty else {
+            throw result.1 ?? WalkingCourseError.routeNotFound
         }
         
-        let sortedWalkingCourses = walkingCourses.sorted {
+        let sortedWalkingCourses = result.0.sorted {
             abs(($0.distance * 1_000) - distanceMeters) < abs(($1.distance * 1_000) - distanceMeters)
         }
         
