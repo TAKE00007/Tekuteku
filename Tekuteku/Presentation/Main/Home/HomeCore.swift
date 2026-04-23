@@ -70,6 +70,13 @@ struct HomeFeature {
             switch action {
             case .binding:
                 return .none
+            case .binding(\.position):
+                if state.displayState == .confirm,
+                   state.isFollowingUser,
+                   state.position.positionedByUser {
+                    state.isFollowingUser = false
+                }
+                return .none
             case .onAppear:
                 return .run { send in
                     await locationService.requestWhenInUserAuthorization()
