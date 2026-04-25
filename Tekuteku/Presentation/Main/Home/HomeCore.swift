@@ -16,6 +16,7 @@ struct HomeFeature {
         var courses: [WalkingCourse]?
         var course: WalkingCourse?
         var currentLocation: Coordinate?
+        var currentHeading: CLLocationDirection?
         var weatherData: WeatherData?
         var errorMessage: String?
         
@@ -101,6 +102,7 @@ struct HomeFeature {
             case .currentLocationUpdated(let locationUpdate):
                 let coordinate = locationUpdate.coordinate.domain
                 state.currentLocation = coordinate
+                state.currentHeading = locationUpdate.heading
                 if state.position == .automatic {
                     state.position = .userLocation(followsHeading: false, fallback: .automatic)
                 }
