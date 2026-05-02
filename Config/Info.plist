@@ -20,6 +20,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>散歩記録を表示するために使用します</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>散歩記録を表示するために使用します</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>散歩コースを表示するため現在地を利用します</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
