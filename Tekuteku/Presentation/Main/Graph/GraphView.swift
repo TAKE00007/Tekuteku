@@ -7,6 +7,14 @@ struct GraphView: View {
     var body: some View {
         VStack {
             Text("記録を表示する")
+                .font(.headline)
+
+            if store.isLoading {
+                ProgressView()
+            }
+
+            Text(store.statusMessage ?? "まだ取得していません")
+                .foregroundStyle(.secondary)
         }
         .task {
             store.send(.onAppear)
