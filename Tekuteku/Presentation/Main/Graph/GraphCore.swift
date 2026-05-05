@@ -6,8 +6,6 @@ import HealthKit
 struct GraphFeature {
     @ObservableState
     struct State: Equatable {
-        var graphValue = 0
-        var sampleCount = 0
         var statusMessage: String?
         var healthData: [HealthData] = []
         var isLoading = false
@@ -38,12 +36,11 @@ struct GraphFeature {
                 .cancellable(id: "graph-health-data", cancelInFlight: true)
             case .healthDataResponse(.success(let samples)):
                 state.isLoading = false
-                state.sampleCount = samples.count
-                state.statusMessage = "取得件数: \(samples.count)件"
+                state.healthData = samples
                 return .none
             case .healthDataResponse(.failure(let error)):
                 state.isLoading = false
-                state.sampleCount = 0
+                state.healthData = []
                 state.statusMessage = error.message
                 return .none
             }
