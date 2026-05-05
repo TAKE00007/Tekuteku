@@ -35,62 +35,65 @@ extension HealthDataServiceClient {
             }
             let healthStore = HKHealthStore()
             let manager = HealthDataManager()
-            let stepCountType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-            let distanceWalkingRunningType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+            let healthData = try await manager.fetchHealthDataForGraph(healthStore: healthStore)
             
-            try await manager.requestAuthorization(
-                healthStore: healthStore,
-                readTypes: Set([stepCountType, distanceWalkingRunningType])
-            )
-            
-            let calendar = Calendar.current
-            let endDate = Date()
-            let startDate = Calendar.current.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: endDate)) ?? endDate
-            var interval = DateComponents()
-            interval.day = 1
-            
-            let stepData = try await manager.fetchHealthData(
-                healthStore: healthStore,
-                identifier: .stepCount,
-                startDate: startDate,
-                endDate: endDate,
-                interval: interval
-            )
-            
-            let distanceData = try await manager.fetchHealthData(
-                healthStore: healthStore,
-                identifier: .distanceWalkingRunning,
-                startDate: startDate,
-                endDate: endDate,
-                interval: interval
-            )
-            
-                        
-            let healthData = stepData.map {
-                HealthData(date: $0.key, stepCount: $0.value, distanceKilometers: distanceData[$0.key] ?? 0.0)
-            }
-
             return healthData
         }
     )
 }
 
-private struct HealthDataManager {
-    func requestAuthorization(healthStore: HKHealthStore, readTypes: Set<HKObjectType>) async throws {
+nonisolated private struct HealthDataManager {
+    fileprivate func fetchHealthDataForGraph(healthStore: HKHealthStore) async throws -> [HealthData] {
+        let stepCountType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+        let distanceWalkingRunningType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        
+        try await requestAuthorization(
+            healthStore: healthStore,
+            readTypes: Set([stepCountType, distanceWalkingRunningType])
+        )
+        
+        let calendar = Calendar.current
+        let endDate = Date()
+        let startDate = Calendar.current.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: endDate)) ?? endDate
+        var interval = DateComponents()
+        interval.day = 1
+        
+        let stepData = try await fetchHealthData(
+            healthStore: healthStore,
+            identifier: .stepCount,
+            startDate: startDate,
+            endDate: endDate,
+            interval: interval
+        )
+        
+        let distanceData = try await fetchHealthData(
+            healthStore: healthStore,
+            identifier: .distanceWalkingRunning,
+            startDate: startDate,
+            endDate: endDate,
+            interval: interval
+        )
+        
+        let healthData = stepData.map {
+            HealthData(date: $0.key, stepCount: $0.value, distanceKilometers: distanceData[$0.key] ?? 0.0)
+        }
+
+        return healthData
+    }
+
+    private func requestAuthorization(healthStore: HKHealthStore, readTypes: Set<HKObjectType>) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             healthStore.requestAuthorization(toShare: nil, read: readTypes) { success, error in
                 if let error {
                     continuation.resume(throwing: HealthKitError.underlying(error.localizedDescription))
-                } else if success {
-                    continuation.resume(returning: ())
                 } else {
-                    continuation.resume(throwing: HealthKitError.authorizationDenied)
+                    continuation.resume(returning: ())
                 }
             }
         }
     }
     
-    func fetchHealthData(
+    private func fetchHealthData(
         healthStore: HKHealthStore,
         identifier: HKQuantityTypeIdentifier,
         startDate: Date,
@@ -98,14 +101,6 @@ private struct HealthDataManager {
         interval: DateComponents
     ) async throws -> [Date: Double] {
         let quantityType = HKQuantityType(identifier)
-        switch healthStore.authorizationStatus(for: quantityType) {
-        case .notDetermined, .sharingDenied:
-            throw HealthKitError.authorizationDenied
-        case .sharingAuthorized:
-            break
-        @unknown default:
-            fatalError()
-        }
         
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         
@@ -158,21 +153,4 @@ struct HealthData: Identifiable, Equatable {
     let stepCount: Double
     let distanceKilometers: Double
     var id: Date { date }
-}
-
-enum HealthKitError: Error {
-    case unavailable
-    case authorizationDenied
-    case underlying(String)
-
-    var message: String {
-        switch self {
-        case .unavailable:
-            return "このデバイスでは HealthKit を利用できません"
-        case .authorizationDenied:
-            return "HealthKit の権限がありません"
-        case .underlying(let message):
-            return "HealthKit の取得に失敗しました: \(message)"
-        }
-    }
 }
