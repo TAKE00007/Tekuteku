@@ -4,10 +4,28 @@ import Charts
 
 struct WeekGraphView: View {
     let sampleData: [DailyRecord] = MockWeeklyHistoryData.twelveWeeks
+    private let visibleDays = 7
     private let step: Double = 5000
     
+    @State private var targetY: Double = 5000
+    @State private var scrollPosition: Date = {
+        let calendar = Calendar.current
+        let lastDate = MockWeeklyHistoryData.twelveWeeks.last?.date ?? Date()
+        return calendar.date(byAdding: .day, value: -6, to: lastDate) ?? lastDate
+    }()
+    
+    private var visibleData: [DailyRecord] {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: scrollPosition)
+        let end = calendar.date(byAdding: .day, value: visibleDays, to: start) ?? start
+        
+        return sampleData.filter { data in
+            data.date >= start && data.date < end
+        }
+    }
+    
     private var maxY: Double {
-        let rawMax = sampleData.map(\.value).max() ?? step
+        let rawMax = visibleData.map(\.value).max() ?? step
         return max(step, (rawMax / step).rounded(.up) * step)
     }
     
@@ -39,7 +57,7 @@ struct WeekGraphView: View {
             .chartScrollableAxes(.horizontal)
             .chartXVisibleDomain(length: 7*24*60*60)
             .chartScrollTargetBehavior(.valueAligned(matching: DateComponents(hour: 0)))
-            .chartScrollPosition(initialX: sampleData.last?.date ?? Date())
+            .chartScrollPosition(x: $scrollPosition)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day)) { value in
                     if let date = value.as(Date.self) {
@@ -59,11 +77,20 @@ struct WeekGraphView: View {
                     }
                 }
             }
+            .chartYScale(domain: 0...targetY)
             .chartYAxis {
                 AxisMarks(values: Array(stride(from: 0, through: maxY, by: step)))  { value in
                     AxisGridLine()
                     AxisTick()
                     AxisValueLabel()
+                }
+            }
+            .onAppear {
+                targetY = maxY
+            }
+            .onChange(of: maxY) { _, newValue in
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    targetY = newValue
                 }
             }
             .padding()
