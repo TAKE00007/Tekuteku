@@ -56,7 +56,9 @@ struct WeekGraphView: View {
             }
             .chartScrollableAxes(.horizontal)
             .chartXVisibleDomain(length: 7*24*60*60)
+            .chartXScale(range: .plotDimension(startPadding: 8, endPadding: 8))
             .chartScrollTargetBehavior(.valueAligned(matching: DateComponents(hour: 0)))
+            .chartScrollPosition(initialX: sampleData.last?.date ?? Date())
             .chartScrollPosition(x: $scrollPosition)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day)) { value in
