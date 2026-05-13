@@ -24,6 +24,10 @@ struct WeekGraphView: View {
         }
     }
     
+    private var visibleDataAverage: Double {
+        return visibleData.averageValue
+    }
+    
     private var maxY: Double {
         let rawMax = visibleData.map(\.value).max() ?? step
         return max(step, (rawMax / step).rounded(.up) * step)
@@ -36,7 +40,7 @@ struct WeekGraphView: View {
                     .font(.caption)
                     .foregroundStyle(.gray)
                 HStack {
-                    Text("3000")
+                    Text("\(Int(visibleDataAverage))")
                         .font(.largeTitle)
                     Text("歩")
                         .bold()
@@ -120,6 +124,12 @@ struct DailyRecord: Identifiable {
     var id: Date { date }
 }
 
+extension Array where Element == DailyRecord {
+    var averageValue: Double {
+        guard !isEmpty else { return 0 }
+        return map(\.value).reduce(0, +) / Double(count)
+    }
+}
 
 enum MockWeeklyHistoryData {
     static let twelveWeeks: [DailyRecord] = [
