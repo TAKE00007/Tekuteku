@@ -95,13 +95,9 @@ struct WeekGraphView: View {
                 targetY = maxY
                 averageSteps = visibleDataAverage
             }
-            .onChange(of: maxY) { _, newValue in
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    targetY = newValue
-                }
-            }
-            .onChange(of: visibleDataAverage) { _, newValue in
+            .onChange(of: visibleData) { _, newValue in
                 averageSteps = visibleDataAverage
+                targetY = maxY
             }
             .padding()
         }
@@ -122,7 +118,7 @@ struct WeekGraphView: View {
     }
 }
 
-struct DailyRecord: Identifiable {
+struct DailyRecord: Identifiable, Equatable {
     let date: Date
     let value: Double
     var id: Date { date }
