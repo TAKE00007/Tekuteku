@@ -34,6 +34,28 @@ struct WeekGraphView: View {
         return max(step, (rawMax / step).rounded(.up) * step)
     }
     
+    private var visibleDate: (startDate: String, endDate: String) {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: scrollPosition)
+        let end = calendar.date(byAdding: .day, value: visibleDays, to: start) ?? start
+        
+        let startDate = start.formatted(.dateTime
+            .year()
+            .month()
+            .day()
+            .locale(Locale(identifier: "ja_JP"))
+        )
+        
+        let endDate = end.formatted(.dateTime
+            .year()
+            .month()
+            .day()
+            .locale(Locale(identifier: "ja_JP"))
+        )
+        
+        return (startDate, endDate)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
@@ -47,7 +69,7 @@ struct WeekGraphView: View {
                         .bold()
                         .foregroundStyle(.gray)
                 }
-                Text("2026年 5月3日~9日")
+                Text("\(visibleDate.startDate)~\(visibleDate.endDate)")
                     .foregroundStyle(.gray)
             }
             .padding(.top, 4)
