@@ -8,6 +8,7 @@ struct WeekGraphView: View {
     private let step: Double = 5000
     
     @State private var targetY: Double = 5000
+    @State private var averageSteps: Double = 0
     @State private var scrollPosition: Date = {
         let calendar = Calendar.current
         let lastDate = MockWeeklyHistoryData.twelveWeeks.last?.date ?? Date()
@@ -40,7 +41,7 @@ struct WeekGraphView: View {
                     .font(.caption)
                     .foregroundStyle(.gray)
                 HStack {
-                    Text("\(Int(visibleDataAverage))")
+                    Text("\(Int(averageSteps))")
                         .font(.largeTitle)
                     Text("歩")
                         .bold()
@@ -62,13 +63,11 @@ struct WeekGraphView: View {
             .chartXVisibleDomain(length: 7*24*60*60)
             .chartXScale(range: .plotDimension(startPadding: 8, endPadding: 8))
             .chartScrollTargetBehavior(.valueAligned(matching: DateComponents(hour: 0)))
-            .chartScrollPosition(initialX: sampleData.last?.date ?? Date())
             .chartScrollPosition(x: $scrollPosition)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day)) { value in
                     if let date = value.as(Date.self) {
                         let day = shortWeekday(for: date)
-                        
                         if day != "月" {
                             AxisGridLine()
                             AxisValueLabel {
@@ -92,12 +91,17 @@ struct WeekGraphView: View {
                 }
             }
             .onAppear {
+                scrollPosition = sampleData.last?.date ?? Date()
                 targetY = maxY
+                averageSteps = visibleDataAverage
             }
             .onChange(of: maxY) { _, newValue in
                 withAnimation(.easeInOut(duration: 0.25)) {
                     targetY = newValue
                 }
+            }
+            .onChange(of: visibleDataAverage) { _, newValue in
+                averageSteps = visibleDataAverage
             }
             .padding()
         }
