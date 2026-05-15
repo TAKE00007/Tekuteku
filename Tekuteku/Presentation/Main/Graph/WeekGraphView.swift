@@ -36,22 +36,34 @@ struct WeekGraphView: View {
     
     private var visibleDate: (startDate: String, endDate: String) {
         let calendar = Calendar.current
+        let locale = Locale(identifier: "ja_JP")
+        
         let start = calendar.startOfDay(for: scrollPosition)
+        let startComponents = calendar.dateComponents([.year, .month], from: start)
         let end = calendar.date(byAdding: .day, value: visibleDays, to: start) ?? start
+        let endConponents = calendar.dateComponents([.year, .month], from: end)
+        
+        let isSameYear = startComponents.year == endConponents.year
+        let isSameMonth = startComponents.month == endConponents.month
         
         let startDate = start.formatted(.dateTime
             .year()
             .month()
             .day()
-            .locale(Locale(identifier: "ja_JP"))
+            .locale(locale)
         )
         
-        let endDate = end.formatted(.dateTime
-            .year()
-            .month()
-            .day()
-            .locale(Locale(identifier: "ja_JP"))
-        )
+        let endStyle: Date.FormatStyle = {
+            if isSameYear && isSameMonth {
+                return .dateTime.day().locale(locale)
+            } else if isSameYear {
+                return .dateTime.month().day().locale(locale)
+            } else {
+                return .dateTime.year().month().day().locale(locale)
+            }
+        }()
+        
+        let endDate = end.formatted(endStyle)
         
         return (startDate, endDate)
     }
