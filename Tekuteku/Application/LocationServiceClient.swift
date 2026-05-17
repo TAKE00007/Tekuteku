@@ -4,7 +4,12 @@ import ComposableArchitecture
 
 struct LocationServiceClient {
     var requestWhenInUserAuthorization:@MainActor @Sendable  () -> Void
-    var locationUpdates: @MainActor @Sendable () -> AsyncStream<CLLocationCoordinate2D>
+    var locationUpdates: @MainActor @Sendable () -> AsyncStream<LocationUpdate>
+}
+
+struct LocationUpdate: Sendable {
+    let coordinate: CLLocationCoordinate2D
+    let heading: CLLocationDirection?
 }
 
 extension LocationServiceClient: DependencyKey {
@@ -20,8 +25,8 @@ extension LocationServiceClient: DependencyKey {
                     let holder = CLLocationManagerHolder.shared
                     let manager = holder.manager
                     let delegate = LocationManagerDelegateProxy(
-                        didUpdateLocation: { coordinate in
-                            continuation.yield(coordinate)
+                        didUpdateLocation: { locationUpdate in
+                            continuation.yield(locationUpdate)
                         },
                         didFinish: {
                             continuation.finish()
@@ -35,6 +40,9 @@ extension LocationServiceClient: DependencyKey {
                         manager.requestWhenInUseAuthorization()
                     case .authorizedAlways, .authorizedWhenInUse:
                         manager.startUpdatingLocation()
+                        if CLLocationManager.headingAvailable() {
+                            manager.startUpdatingHeading()
+                        }
                     case .denied, .restricted:
                         break
                     @unknown default:
@@ -43,6 +51,7 @@ extension LocationServiceClient: DependencyKey {
                     
                     continuation.onTermination = { _ in
                         manager.stopUpdatingLocation()
+                        manager.stopUpdatingHeading()
                     }
                 }
             }
@@ -66,11 +75,14 @@ private final class CLLocationManagerHolder {
 }
 
 private final class LocationManagerDelegateProxy: NSObject, CLLocationManagerDelegate {
-    private let didUpdateLocation: (CLLocationCoordinate2D) -> Void
+    private let didUpdateLocation: (LocationUpdate) -> Void
     private let didFinish: () -> Void
     
+    private var latestCoordinate: CLLocationCoordinate2D?
+    private var latestHeading: CLLocationDirection?
+    
     init(
-        didUpdateLocation: @escaping (CLLocationCoordinate2D) -> Void,
+        didUpdateLocation: @escaping (LocationUpdate) -> Void,
         didFinish: @escaping () -> Void
     ) {
         self.didUpdateLocation = didUpdateLocation
@@ -81,8 +93,11 @@ private final class LocationManagerDelegateProxy: NSObject, CLLocationManagerDel
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             manager.startUpdatingLocation()
+            manager.startUpdatingHeading()
         case .denied, .restricted:
             manager.stopUpdatingLocation()
+            manager.stopUpdatingHeading()
+            didFinish()
         case .notDetermined:
             break
         @unknown default:
@@ -92,10 +107,28 @@ private final class LocationManagerDelegateProxy: NSObject, CLLocationManagerDel
     
     func locationManager(_ merger: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let coordinate = locations.last?.coordinate else { return }
-        didUpdateLocation(coordinate)
+        latestCoordinate = coordinate
+        emitIfPossible()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        guard newHeading.headingAccuracy >= 0 else { return }
+
+        let heading = newHeading.trueHeading >= 0
+                ? newHeading.trueHeading
+                : newHeading.magneticHeading
+        latestHeading = heading
+        emitIfPossible()
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         didFinish()
+    }
+    
+    private func emitIfPossible() {
+        guard let latestCoordinate else { return }
+        didUpdateLocation(
+            LocationUpdate(coordinate: latestCoordinate, heading: latestHeading)
+        )
     }
 }

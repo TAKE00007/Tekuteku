@@ -16,6 +16,7 @@ struct HomeFeature {
         var courses: [WalkingCourse]?
         var course: WalkingCourse?
         var currentLocation: Coordinate?
+        var currentHeading: CLLocationDirection?
         var weatherData: WeatherData?
         var errorMessage: String?
         
@@ -38,7 +39,7 @@ struct HomeFeature {
         case locationTask
         case updatePosition(MapCameraPosition)
         case updateCourseID(UUID)
-        case currentLocationUpdated(CLLocationCoordinate2D)
+        case currentLocationUpdated(LocationUpdate)
         case fetchWeather(Coordinate)
         
         case tapUserLocation
@@ -98,14 +99,15 @@ struct HomeFeature {
                 }
                 state.selectedCourseID = id
                 return .none
-            case .currentLocationUpdated(let location):
-                let coordinate = location.domain
+            case .currentLocationUpdated(let locationUpdate):
+                let coordinate = locationUpdate.coordinate.domain
                 state.currentLocation = coordinate
+                state.currentHeading = locationUpdate.heading
                 if state.position == .automatic {
                     state.position = .userLocation(followsHeading: false, fallback: .automatic)
                 }
                 if state.isFollowingUser {
-                    state.position = .camera(MapCamera(centerCoordinate: location, distance: state.cameraDistance))
+                    state.position = .camera(MapCamera(centerCoordinate: locationUpdate.coordinate, distance: state.cameraDistance))
                 }
                 return .run { send in
                     await send(.fetchWeather(coordinate))

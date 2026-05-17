@@ -9,7 +9,9 @@ struct HomeView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             Map(position: $store.position, scope: mapScope) {
-                UserAnnotation()
+                UserAnnotation(anchor: .center) {
+                    CurrentLocationMarker(heading: store.currentHeading)
+                }
                 
                 if let coursePolyline = store.course?.route.mkPolyline {
                     MapPolyline(coursePolyline)
@@ -158,6 +160,31 @@ struct HomeView: View {
         }
         .padding( .trailing, 10)
         .buttonBorderShape(.circle)
+    }
+}
+
+private struct CurrentLocationMarker: View {
+    let heading: CLLocationDirection?
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(.white)
+                .frame(width: 22, height: 22)
+
+            Circle()
+                .fill(.blue)
+                .frame(width: 14, height: 14)
+
+            if let heading {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.blue)
+                    .offset(y: -17)
+                    .rotationEffect(.degrees(heading))
+                    .animation(.linear(duration: 0.08), value: heading)
+            }
+        }
     }
 }
 
