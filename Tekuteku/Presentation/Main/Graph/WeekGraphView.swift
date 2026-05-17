@@ -71,23 +71,25 @@ struct WeekGraphView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading) {
-                Text("平均")
-                    .font(.caption)
-                    .foregroundStyle(.gray)
-                HStack {
-                    Text("\(Int(averageSteps))")
-                        .font(.largeTitle)
-                    Text("歩")
-                        .bold()
+        VStack(alignment: .leading, spacing: 60) {
+            if selectedDate == nil {
+                VStack(alignment: .leading) {
+                    Text("平均")
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                    HStack {
+                        Text("\(Int(averageSteps))")
+                            .font(.largeTitle)
+                        Text("歩")
+                            .bold()
+                            .foregroundStyle(.gray)
+                    }
+                    Text("\(visibleDate.startDate)~\(visibleDate.endDate)")
                         .foregroundStyle(.gray)
                 }
-                Text("\(visibleDate.startDate)~\(visibleDate.endDate)")
-                    .foregroundStyle(.gray)
+                .padding(.top, 4)
+                .padding(.horizontal, 16)
             }
-            .padding(.top, 4)
-            .padding(.horizontal, 16)
             
             Chart {
                 ForEach(sampleData) { data in
@@ -96,26 +98,31 @@ struct WeekGraphView: View {
                         y: .value("Step", data.value)
                     )
                 }
-                
-                if let selectedDate {
-                    RuleMark(
-                        x: .value("Selected", selectedDate, unit: .day),
-                        yStart: .value("Start", 0),
-                        yEnd: .value("End", targetY * 0.92)
-                    )
-                    .foregroundStyle(.gray.opacity(0.3))
-                    .offset(yStart: -20)
-                    .zIndex(-1)
-                    .annotation(
-                        position: .top,
-                        spacing: 10,
-                        overflowResolution: .init(
-                            x: .fit(to: .chart),
-                            y: .fit(to: .chart)
-                        )
-                    ) {
-                        AnnotationView
-                            .padding(.top, 8)
+            }
+            .chartOverlay { chartProxy in
+                GeometryReader { geometory in
+                    if let selectedDate,
+                        let plotFrame = chartProxy.plotFrame,
+                       let x = centerX(for: selectedDate, chartProxy: chartProxy) {
+                        let frame = geometory[plotFrame]
+                        
+                        let lineX = frame.minX + x
+
+                        ZStack(alignment: .topLeading) {
+                            Rectangle()
+                                .fill(.gray.opacity(0.3))
+                                .frame(width: 2, height: frame.height + 40)
+                                .position(
+                                    x: lineX,
+                                    y: frame.minY + frame.height / 2 - 20
+                                )
+
+                            AnnotationView
+                                .position(
+                                    x: lineX,
+                                    y: frame.minY - 36
+                                )
+                        }
                     }
                 }
             }
@@ -164,19 +171,53 @@ struct WeekGraphView: View {
                 guard let newValue else { return }
                 selectedDate = handleSelection(selectedDate: newValue)
             }
+            .frame(height: 400)
             .padding()
         }
         
     }
     
     private var AnnotationView: some View {
-        Text("選択されました")
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(.red)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+        VStack(alignment: .leading) {
+            Text("合計")
+                .font(.caption)
+                .foregroundStyle(.gray)
+            HStack(alignment: .lastTextBaseline) {
+                Text("18,625")
+                    .font(.title2)
+                Text("歩")
+                    .foregroundStyle(.gray)
+            }
+            .bold()
+            
+            if let selectedDate {
+                Text(selectedDate, format: Date.FormatStyle(date: .numeric, time: .none))
+                    .font(.caption)
+                    .foregroundStyle(.gray)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(.systemGray5))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+    
+    private func centerX(
+        for date: Date,
+        chartProxy: ChartProxy
+    ) -> CGFloat? {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+
+        guard
+            let nextDay = calendar.date(byAdding: .day, value: 1, to: startOfDay),
+            let startX = chartProxy.position(forX: startOfDay),
+            let endX = chartProxy.position(forX: nextDay)
+        else {
+            return nil
+        }
+
+        return (startX + endX) / 2
     }
     
     private func handleSelection(selectedDate: Date) -> Date? {
