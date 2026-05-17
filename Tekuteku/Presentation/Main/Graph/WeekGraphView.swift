@@ -14,7 +14,9 @@ struct WeekGraphView: View {
         let lastDate = MockWeeklyHistoryData.twelveWeeks.last?.date ?? Date()
         return calendar.date(byAdding: .day, value: -6, to: lastDate) ?? lastDate
     }()
-    
+    @State private var rawSelectedDate: Date?
+    @State private var selectedDate: Date? = nil
+
     private var visibleData: [DailyRecord] {
         let calendar = Calendar.current
         let start = calendar.startOfDay(for: scrollPosition)
@@ -87,11 +89,35 @@ struct WeekGraphView: View {
             .padding(.top, 4)
             .padding(.horizontal, 16)
             
-            Chart(sampleData) { data in
-                BarMark(
-                    x: .value("Day", data.date, unit: .day),
-                    y: .value("Step", data.value)
-                )
+            Chart {
+                ForEach(sampleData) { data in
+                    BarMark(
+                        x: .value("Day", data.date, unit: .day),
+                        y: .value("Step", data.value)
+                    )
+                }
+                
+                if let selectedDate {
+                    RuleMark(
+                        x: .value("Selected", selectedDate, unit: .day),
+                        yStart: .value("Start", 0),
+                        yEnd: .value("End", targetY * 0.92)
+                    )
+                    .foregroundStyle(.gray.opacity(0.3))
+                    .offset(yStart: -20)
+                    .zIndex(-1)
+                    .annotation(
+                        position: .top,
+                        spacing: 10,
+                        overflowResolution: .init(
+                            x: .fit(to: .chart),
+                            y: .fit(to: .chart)
+                        )
+                    ) {
+                        AnnotationView
+                            .padding(.top, 8)
+                    }
+                }
             }
             .chartScrollableAxes(.horizontal)
             .chartXVisibleDomain(length: 7*24*60*60)
@@ -116,6 +142,7 @@ struct WeekGraphView: View {
                     }
                 }
             }
+            .chartXSelection(value: $rawSelectedDate)
             .chartYScale(domain: 0...targetY)
             .chartYAxis {
                 AxisMarks(values: Array(stride(from: 0, through: maxY, by: step)))  { value in
@@ -133,8 +160,28 @@ struct WeekGraphView: View {
                 averageSteps = visibleDataAverage
                 targetY = maxY
             }
+            .onChange(of: rawSelectedDate) { _, newValue in
+                guard let newValue else { return }
+                selectedDate = handleSelection(selectedDate: newValue)
+            }
             .padding()
         }
+        
+    }
+    
+    private var AnnotationView: some View {
+        Text("選択されました")
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(.red)
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+    
+    private func handleSelection(selectedDate: Date) -> Date? {
+        let closet = sampleData.min(by: { abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate)) })
+        return closet?.date
     }
     
     func shortWeekday(for date: Date) -> String {
