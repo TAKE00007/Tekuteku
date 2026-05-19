@@ -150,6 +150,18 @@ struct WeekGraphView: View {
                 }
             }
             .chartXSelection(value: $rawSelectedDate)
+            .chartGesture { chartProxy in
+                SpatialTapGesture()
+                    .onEnded { value in
+                        chartProxy.selectXValue(at: value.location.x)
+                    }
+                    .exclusively(
+                        before: DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                chartProxy.selectXValue(at: value.location.x)
+                            }
+                    )
+            }
             .chartYScale(domain: 0...targetY)
             .chartYAxis {
                 AxisMarks(values: Array(stride(from: 0, through: maxY, by: step)))  { value in
