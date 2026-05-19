@@ -99,6 +99,25 @@ struct WeekGraphView: View {
                     )
                 }
             }
+            .chartBackground { chartProxy in
+                GeometryReader { geometory in
+                    if let selectedDate,
+                        let plotFrame = chartProxy.plotFrame,
+                       let x = centerX(for: selectedDate, chartProxy: chartProxy) {
+                        let frame = geometory[plotFrame]
+                        
+                        let lineX = frame.minX + x
+
+                        Rectangle()
+                            .fill(.gray.opacity(0.3))
+                            .frame(width: 2, height: frame.height + 40)
+                            .position(
+                                x: lineX,
+                                y: frame.minY + frame.height / 2 - 20
+                            )
+                    }
+                }
+            }
             .chartOverlay { chartProxy in
                 GeometryReader { geometory in
                     if let selectedDate,
@@ -108,21 +127,11 @@ struct WeekGraphView: View {
                         
                         let lineX = frame.minX + x
 
-                        ZStack(alignment: .topLeading) {
-                            Rectangle()
-                                .fill(.gray.opacity(0.3))
-                                .frame(width: 2, height: frame.height + 40)
-                                .position(
-                                    x: lineX,
-                                    y: frame.minY + frame.height / 2 - 20
-                                )
-
-                            AnnotationView
-                                .position(
-                                    x: lineX,
-                                    y: frame.minY - 36
-                                )
-                        }
+                        AnnotationView
+                            .position(
+                                x: lineX,
+                                y: frame.minY - 36
+                            )
                     }
                 }
             }
