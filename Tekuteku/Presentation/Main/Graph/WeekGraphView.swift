@@ -130,7 +130,7 @@ struct WeekGraphView: View {
                         AnnotationView
                             .position(
                                 x: lineX,
-                                y: frame.minY - 36
+                                y: frame.minY - 40
                             )
                     }
                 }
@@ -219,7 +219,7 @@ struct WeekGraphView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Color(.systemGray5))
+        .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     
