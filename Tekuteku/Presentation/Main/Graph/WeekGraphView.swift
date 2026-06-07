@@ -16,6 +16,9 @@ struct WeekGraphView: View {
     }()
     @State private var rawSelectedDate: Date?
     @State private var selectedDate: Date? = nil
+    
+    @State private var chartFrame: CGRect = .zero
+    @State private var containerFrame: CGRect = .zero
 
     private var visibleData: [DailyRecord] {
         let calendar = Calendar.current
@@ -72,6 +75,7 @@ struct WeekGraphView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 60) {
+            Spacer()
             if selectedDate == nil {
                 VStack(alignment: .leading) {
                     Text("平均")
@@ -89,113 +93,173 @@ struct WeekGraphView: View {
                 }
                 .padding(.top, 4)
                 .padding(.horizontal, 16)
+            } else {
+                EmptyView()
             }
             
-            Chart {
-                ForEach(sampleData) { data in
-                    BarMark(
-                        x: .value("Day", data.date, unit: .day),
-                        y: .value("Step", data.value)
-                    )
-                }
-            }
-            .chartBackground { chartProxy in
-                GeometryReader { geometory in
-                    if let selectedDate,
-                        let plotFrame = chartProxy.plotFrame,
-                       let x = centerX(for: selectedDate, chartProxy: chartProxy) {
-                        let frame = geometory[plotFrame]
-                        
-                        let lineX = frame.minX + x
-
-                        Rectangle()
-                            .fill(.gray.opacity(0.3))
-                            .frame(width: 2, height: frame.height + 40)
-                            .position(
-                                x: lineX,
-                                y: frame.minY + frame.height / 2 - 20
-                            )
-                    }
-                }
-            }
-            .chartOverlay { chartProxy in
-                GeometryReader { geometory in
-                    if let selectedDate,
-                        let plotFrame = chartProxy.plotFrame,
-                       let x = centerX(for: selectedDate, chartProxy: chartProxy) {
-                        let frame = geometory[plotFrame]
-                        
-                        let lineX = frame.minX + x
-
-                        AnnotationView
-                            .position(
-                                x: lineX,
-                                y: frame.minY - 40
-                            )
-                    }
-                }
-            }
-            .chartScrollableAxes(.horizontal)
-            .chartXVisibleDomain(length: 7*24*60*60)
-            .chartXScale(range: .plotDimension(startPadding: 8, endPadding: 8))
-            .chartScrollTargetBehavior(.valueAligned(matching: DateComponents(hour: 0)))
-            .chartScrollPosition(x: $scrollPosition)
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day)) { value in
-                    if let date = value.as(Date.self) {
-                        let day = shortWeekday(for: date)
-                        if day != "月" {
-                            AxisGridLine()
-                            AxisValueLabel {
-                                Text(day)
-                            }
-                            AxisTick()
-                        } else {
-                            AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
-                            AxisValueLabel { Text(day) }
-                            AxisTick(stroke: StrokeStyle(lineWidth: 1))
-                        }
-                    }
-                }
-            }
-            .chartXSelection(value: $rawSelectedDate)
-            .chartGesture { chartProxy in
-                SpatialTapGesture()
-                    .onEnded { value in
-                        chartProxy.selectXValue(at: value.location.x)
-                    }
-                    .exclusively(
-                        before: DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                chartProxy.selectXValue(at: value.location.x)
-                            }
-                    )
-            }
-            .chartYScale(domain: 0...targetY)
-            .chartYAxis {
-                AxisMarks(values: Array(stride(from: 0, through: maxY, by: step)))  { value in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel()
-                }
-            }
-            .onAppear {
-                scrollPosition = sampleData.last?.date ?? Date()
-                targetY = maxY
-                averageSteps = visibleDataAverage
-            }
-            .onChange(of: visibleData) { _, newValue in
-                averageSteps = visibleDataAverage
-                targetY = maxY
-            }
-            .onChange(of: rawSelectedDate) { _, newValue in
-                guard let newValue else { return }
-                selectedDate = handleSelection(selectedDate: newValue)
-            }
+            chartContent
             .frame(height: 400)
+            .background {
+                GeometryReader { geometry in
+                    Color.clear
+                        .onAppear {
+                            chartFrame = geometry.frame(in: .global)
+                        }
+                        .onChange(of: geometry.frame(in: .global)) { _, newValue in
+                            chartFrame = newValue
+                        }
+                }
+            }
             .padding()
+            Spacer()
+        }
+        .background {
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        containerFrame = geometry.frame(in: .global)
+                    }
+                    .onChange(of: geometry.frame(in: .global)) { _, newValue in
+                        containerFrame = newValue
+                    }
+            }
+        }
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            SpatialTapGesture()
+                .onEnded { value in
+                    let globalLocation = CGPoint(
+                        x: containerFrame.minX + value.location.x,
+                        y: containerFrame.minY + value.location.y
+                    )
+
+                    guard chartFrame != .zero else { return }
+                    guard !chartFrame.contains(globalLocation) else { return }
+                
+                    selectedDate = nil
+                    rawSelectedDate = nil
+                }
+        )
+        .onChange(of: rawSelectedDate) { _, newValue in
+            guard let newValue else {
+                selectedDate = nil
+                return
+            }
+                            
+            let oldDate = selectedDate
+            let newDate = handleSelection(selectedDate: newValue)
+            
+            if let oldDate, oldDate == newDate {
+                selectedDate = nil
+            } else {
+                selectedDate = newDate
+            }
         }
         
+    }
+
+    private var chartContent: some View {
+        Chart(sampleData) { data in
+            BarMark(
+                x: .value("Day", data.date, unit: .day),
+                y: .value("Step", data.value)
+            )
+        }
+        .chartBackground { chartProxy in
+            selectionBackground(chartProxy: chartProxy)
+        }
+        .chartOverlay { chartProxy in
+            selectionOverlay(chartProxy: chartProxy)
+        }
+        .chartScrollableAxes(.horizontal)
+        .chartXVisibleDomain(length: 7 * 24 * 60 * 60)
+        .chartXScale(range: .plotDimension(startPadding: 8, endPadding: 8))
+        .chartScrollTargetBehavior(.valueAligned(matching: DateComponents(hour: 0)))
+        .chartScrollPosition(x: $scrollPosition)
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .day)) { value in
+                if let date = value.as(Date.self) {
+                    let day = shortWeekday(for: date)
+                    if day != "月" {
+                        AxisGridLine()
+                        AxisValueLabel {
+                            Text(day)
+                        }
+                        AxisTick()
+                    } else {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
+                        AxisValueLabel { Text(day) }
+                        AxisTick(stroke: StrokeStyle(lineWidth: 1))
+                    }
+                }
+            }
+        }
+        .chartXSelection(value: $rawSelectedDate)
+        .chartGesture { chartProxy in
+            SpatialTapGesture()
+                .onEnded { value in
+                    chartProxy.selectXValue(at: value.location.x)
+                }
+                .exclusively(
+                    before: DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            chartProxy.selectXValue(at: value.location.x)
+                        }
+                )
+        }
+        .chartYScale(domain: 0...targetY)
+        .chartYAxis {
+            AxisMarks(values: Array(stride(from: 0, through: maxY, by: step))) { _ in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel()
+            }
+        }
+        .onAppear {
+            scrollPosition = sampleData.last?.date ?? Date()
+            targetY = maxY
+            averageSteps = visibleDataAverage
+        }
+        .onChange(of: visibleData) { _, _ in
+            averageSteps = visibleDataAverage
+            targetY = maxY
+        }
+    }
+
+    private func selectionBackground(chartProxy: ChartProxy) -> some View {
+        GeometryReader { geometry in
+            if let selectedDate,
+               let plotFrame = chartProxy.plotFrame,
+               let x = centerX(for: selectedDate, chartProxy: chartProxy) {
+                let frame = geometry[plotFrame]
+                let lineX = frame.minX + x
+
+                Rectangle()
+                    .fill(.gray.opacity(0.3))
+                    .frame(width: 2, height: frame.height + 40)
+                    .position(
+                        x: lineX,
+                        y: frame.minY + frame.height / 2 - 20
+                    )
+            }
+        }
+    }
+
+    private func selectionOverlay(chartProxy: ChartProxy) -> some View {
+        GeometryReader { geometry in
+            if let selectedDate,
+               let plotFrame = chartProxy.plotFrame,
+               let x = centerX(for: selectedDate, chartProxy: chartProxy) {
+                let frame = geometry[plotFrame]
+                let lineX = frame.minX + x
+
+                AnnotationView
+                    .position(
+                        x: lineX,
+                        y: frame.minY - 40
+                    )
+            }
+        }
     }
     
     private var AnnotationView: some View {
@@ -221,6 +285,30 @@ struct WeekGraphView: View {
         .padding(.vertical, 4)
         .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+    
+    private func recordNearTap(
+        at location: CGPoint,
+        frame: CGRect,
+        chartProxy: ChartProxy
+    ) -> DailyRecord? {
+        guard frame.contains(location) else { return nil }
+        
+        let candidates = visibleData.compactMap { record -> (record: DailyRecord, x: CGFloat)? in
+            guard let x = centerX(for: record.date, chartProxy: chartProxy) else { return nil }
+            return (record, frame.minX + x)
+        }
+        
+        guard let nearest = candidates.min(by: {
+            abs($0.x - location.x) < abs($1.x - location.x)
+        }) else {
+            return nil
+        }
+        
+        let dayWidth = frame.width / CGFloat(max(visibleDays, 1))
+        let hitThreshold = dayWidth * 0.4
+        
+        return abs(nearest.x - location.x) <= hitThreshold ? nearest.record : nil
     }
     
     private func centerX(
