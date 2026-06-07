@@ -74,10 +74,11 @@ struct WeekGraphView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 60) {
+        VStack(alignment: .leading, spacing: 4) {
             Spacer()
-            if selectedDate == nil {
-                VStack(alignment: .leading) {
+            
+            VStack(alignment: .leading) {
+                if selectedDate == nil {
                     Text("平均")
                         .font(.caption)
                         .foregroundStyle(.gray)
@@ -90,13 +91,14 @@ struct WeekGraphView: View {
                     }
                     Text("\(visibleDate.startDate)~\(visibleDate.endDate)")
                         .foregroundStyle(.gray)
+                } else {
+                    EmptyView()
                 }
-                .padding(.top, 4)
-                .padding(.horizontal, 16)
-            } else {
-                EmptyView()
             }
-            
+            .frame(height: 80)
+            .padding(.top, 4)
+            .padding(.horizontal, 16)
+                        
             chartContent
             .frame(height: 400)
             .background {
