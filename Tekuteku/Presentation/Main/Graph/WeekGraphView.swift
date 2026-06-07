@@ -9,6 +9,7 @@ struct WeekGraphView: View {
     
     @State private var targetY: Double = 5000
     @State private var averageSteps: Double = 0
+    @State private var selectedData: DailyRecord?
     @State private var scrollPosition: Date = {
         let calendar = Calendar.current
         let lastDate = MockWeeklyHistoryData.twelveWeeks.last?.date ?? Date()
@@ -155,6 +156,7 @@ struct WeekGraphView: View {
                 selectedDate = nil
             } else {
                 selectedDate = newDate
+                selectedData = sampleData.first { data in data.date == newDate }
             }
         }
         
@@ -270,7 +272,8 @@ struct WeekGraphView: View {
                 .font(.caption)
                 .foregroundStyle(.gray)
             HStack(alignment: .lastTextBaseline) {
-                Text("18,625")
+                let step = Int(selectedData?.value ?? 0.0)
+                Text("\(step)")
                     .font(.title2)
                 Text("歩")
                     .foregroundStyle(.gray)
