@@ -48,7 +48,6 @@ struct MonthGraphView: View {
         }
         .onChange(of: rawSelectedDate) { _, newValue in
             guard let newValue else {
-                selectedData = nil
                 return
             }
             
@@ -90,6 +89,9 @@ struct MonthGraphView: View {
         .chartBackground { chartProxy in
             selectionBackground(chartProxy: chartProxy)
         }
+        .chartOverlay { chartProxy in
+            selectionOverlay(chartProxy: chartProxy)
+        }
     }
     
     private func selectionBackground(chartProxy: ChartProxy) -> some View {
@@ -110,6 +112,50 @@ struct MonthGraphView: View {
             }
         }
     }
+    
+    private func selectionOverlay(chartProxy: ChartProxy) -> some View {
+        GeometryReader { geometry in
+            if let selectedData,
+               let plotFrame = chartProxy.plotFrame,
+               let x = centerX(for: selectedData.date, chartProxy: chartProxy) {
+                let frame = geometry[plotFrame]
+                let lineX = frame.minX + x
+                
+                AnnotationView
+                    .position(
+                        x: lineX,
+                        y: frame.minY - 40
+                    )
+            }
+        }
+    }
+    
+    private var AnnotationView: some View {
+        VStack(alignment: .leading) {
+            Text("合計")
+                .font(.caption)
+                .foregroundStyle(.gray)
+            HStack(alignment: .lastTextBaseline) {
+                let step = Int(selectedData?.value ?? 0.0)
+                Text("\(step)")
+                    .font(.title2)
+                Text("歩")
+                    .foregroundStyle(.gray)
+            }
+            .bold()
+            
+            if let selectedData {
+                Text(selectedData.date, format: Date.FormatStyle(date: .numeric, time: .none))
+                    .font(.caption)
+                    .foregroundStyle(.gray)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+    
     
     private func centerX(for date: Date, chartProxy: ChartProxy) -> CGFloat? {
         let startOfDay = MonthGraphView.calendar.startOfDay(for: date)
