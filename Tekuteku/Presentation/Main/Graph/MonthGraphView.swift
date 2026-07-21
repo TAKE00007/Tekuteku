@@ -144,6 +144,7 @@ struct MonthGraphView: View {
         .chartOverlay { chartProxy in
             selectionOverlay(chartProxy: chartProxy)
         }
+        .chartYScale(domain: 0...maxY)
     }
     
     private func selectionBackground(chartProxy: ChartProxy) -> some View {
