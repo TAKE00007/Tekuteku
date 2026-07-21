@@ -4,6 +4,7 @@ import Charts
 struct MonthGraphView: View {
     let sampleData: [DailyRecord] = MockWeeklyHistoryData.twelveWeeks
     private let visibleMonth = 1
+    private let step: Double = 5000
     private static let calendar = Calendar.current
     
     @State private var rawSelectedDate: Date?
@@ -20,6 +21,15 @@ struct MonthGraphView: View {
         return sampleData.filter { data in
             start <= data.date && data.date < end
         }
+    }
+    
+    private var visibleDataAverage: Double {
+        return visibleData.averageValue
+    }
+    
+    private var maxY: Double {
+        let rawMax = visibleData.map(\.value).max() ?? step
+        return max(step, (rawMax / step).rounded(.up) * step)
     }
     
     private var visibleDate: (startDate: String, endDate: String) {
@@ -65,7 +75,7 @@ struct MonthGraphView: View {
                         .font(.caption)
                         .foregroundStyle(.gray)
                     HStack {
-                        Text("3000")
+                        Text("\(Int(visibleDataAverage))")
                             .font(.largeTitle)
                         Text("歩")
                             .bold()
