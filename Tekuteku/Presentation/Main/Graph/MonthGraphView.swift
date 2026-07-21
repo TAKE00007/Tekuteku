@@ -3,14 +3,56 @@ import Charts
 
 struct MonthGraphView: View {
     let sampleData: [DailyRecord] = MockWeeklyHistoryData.twelveWeeks
+    private let visibleMonth = 1
     private static let calendar = Calendar.current
     
     @State private var rawSelectedDate: Date?
     @State private var selectedData: DailyRecord?
     @State private var scrollPosition: Date = {
         let lastDate = MockWeeklyHistoryData.twelveWeeks.last?.date ?? Date()
-        return calendar.date(byAdding: .day, value: -6, to: lastDate) ?? lastDate
+        return calendar.date(byAdding: .day, value: -29, to: lastDate) ?? lastDate
     }()
+    
+    private var visibleData: [DailyRecord] {
+        let start = MonthGraphView.calendar.startOfDay(for: scrollPosition)
+        let end = MonthGraphView.calendar.date(byAdding: .month, value: 1, to: start) ?? start
+        
+        return sampleData.filter { data in
+            start <= data.date && data.date < end
+        }
+    }
+    
+    private var visibleDate: (startDate: String, endDate: String) {
+        let start = visibleData.first?.date ?? Date()
+        let startComponent = MonthGraphView.calendar.dateComponents([.year, .month], from: start)
+        let end = MonthGraphView.calendar.date(byAdding: .month, value: visibleMonth,to: start) ?? start
+        let endComponent = MonthGraphView.calendar.dateComponents([.year, .month], from: end)
+        let locale = Locale(identifier: "ja_JP")
+        
+        let isSameYear = startComponent.year == endComponent.year
+        let isSameMonth = startComponent.month == endComponent.month
+        
+        let startDate = start.formatted(.dateTime
+            .year()
+            .month()
+            .day()
+            .locale(locale)
+        )
+        
+        let endStyle: Date.FormatStyle = {
+            if isSameYear && isSameMonth {
+                return .dateTime.day().locale(locale)
+            } else if isSameYear {
+                return .dateTime.year().month().day().locale(locale)
+            } else {
+                return .dateTime.year().month().day().locale(locale)
+            }
+        }()
+        
+        let endDate = end.formatted(endStyle)
+        
+        return (startDate, endDate)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -29,7 +71,7 @@ struct MonthGraphView: View {
                             .bold()
                             .foregroundStyle(.gray)
                     }
-                    Text("2026年5月15日〜6月14日")
+                    Text("\(visibleDate.startDate)~\(visibleDate.endDate)")
                         .foregroundStyle(.gray)
                 } else {
                     EmptyView()
@@ -79,7 +121,7 @@ struct MonthGraphView: View {
             }
             
             AxisMarks(values: .stride(by: .day, count: 7)) { value in
-                if let date = value.as(Date.self) {
+                if value.as(Date.self) != nil {
                     AxisGridLine()
                     AxisTick()
                     AxisValueLabel(format: .dateTime.day().locale(Locale(identifier: "ja_JP")))
