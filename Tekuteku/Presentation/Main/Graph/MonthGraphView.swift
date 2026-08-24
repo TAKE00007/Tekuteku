@@ -7,6 +7,9 @@ struct MonthGraphView: View {
     private let step: Double = 5000
     private static let calendar = Calendar.current
     
+    @State private var chartFrame: CGRect = .zero
+    @State private var containerFrame: CGRect = .zero
+    
     @State private var rawSelectedDate: Date?
     @State private var selectedData: DailyRecord?
     @State private var scrollPosition: Date = {
@@ -93,6 +96,17 @@ struct MonthGraphView: View {
             
             chartContent
                 .frame(height: 400)
+                .background {
+                    GeometryReader { geometry in
+                        Color.clear
+                            .onAppear {
+                                chartFrame = geometry.frame(in: .global)
+                            }
+                            .onChange(of: geometry.frame(in: .global)) { _, newValue in
+                                chartFrame = newValue
+                            }
+                    }
+                }
                 .padding()
             
             Spacer()
@@ -111,6 +125,33 @@ struct MonthGraphView: View {
                 selectedData = newData
             }
         }
+        .background {
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        containerFrame = geometry.frame(in: .global)
+                    }
+                    .onChange(of: geometry.frame(in: .global)) { _, newValue in
+                        containerFrame = newValue
+                    }
+            }
+        }
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            SpatialTapGesture()
+                .onEnded { value in
+                    let globalLocation = CGPoint(
+                        x: containerFrame.minX + value.location.x,
+                        y: containerFrame.minY + value.location.y
+                    )
+                    
+                    guard chartFrame != .zero else { return }
+                    guard !chartFrame.contains(globalLocation) else { return }
+                    
+                    selectedData = nil
+                    rawSelectedDate = nil
+                }
+        )
     }
     
     private var chartContent: some View {
@@ -145,6 +186,18 @@ struct MonthGraphView: View {
             selectionOverlay(chartProxy: chartProxy)
         }
         .chartYScale(domain: 0...maxY)
+//        .chartGesture { chartProxy in
+//            SpatialTapGesture()
+//                .onEnded { value in
+//                    chartProxy.selectXValue(at: value.location.x)
+//                }
+//                .exclusively(
+//                    before: DragGesture(minimumDistance: 0)
+//                        .onChanged { value in
+//                            chartProxy.selectXValue(at: value.location.x)
+//                        }
+//                )
+//        }
     }
     
     private func selectionBackground(chartProxy: ChartProxy) -> some View {

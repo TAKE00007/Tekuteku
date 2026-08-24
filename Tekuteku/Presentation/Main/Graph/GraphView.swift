@@ -36,7 +36,7 @@ struct GraphView: View {
                     .tag(TopTab.day)
                 WeekGraphView()
                     .tag(TopTab.week)
-                GraphPage(title: "月")
+                MonthGraphView()
                     .tag(TopTab.month)
                 GraphPage(title: "6か月")
                     .tag(TopTab.halfYear)
