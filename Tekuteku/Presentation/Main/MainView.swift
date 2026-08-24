@@ -3,6 +3,7 @@ import ComposableArchitecture
 
 struct MainView: View {
     @Bindable var store: StoreOf<MainFeature>
+    @State private var selection: TopTab = .week
     
     var body: some View {
         TabView(
@@ -20,7 +21,7 @@ struct MainView: View {
             }
             
             GraphView(
-                store: store.scope(state: \.graph, action: \.graph)
+                store: store.scope(state: \.graph, action: \.graph), selection: $selection
             )
             .tag(MainFeature.Route.graph)
             .tabItem {
