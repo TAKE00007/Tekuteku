@@ -106,7 +106,7 @@ struct StepHistoryChartFeature {
         case binding(BindingAction<State>)
         
         case task
-        case updateVisibleData
+        case updateVisibleSummary
         case selectionCleared
     }
 
@@ -124,7 +124,7 @@ struct StepHistoryChartFeature {
             case .binding(\.scrollPosition):
                 return .run { send in
                     try await clock.sleep(for: .milliseconds(20)) // TODO: 後で調整する
-                    await send(.updateVisibleData)
+                    await send(.updateVisibleSummary)
                 }
                 .cancellable(
                     id: CancelID.updateVisibleData,
@@ -146,7 +146,7 @@ struct StepHistoryChartFeature {
                 
                 updateVisibleChart(&state, interval: interval)
                 return .none
-            case .updateVisibleData:
+            case .updateVisibleSummary:
                 let interval = state.graphCategory.dateInterval(containing: state.scrollPosition, calendar: state.calendar)
                 updateVisibleChart(&state, interval: interval)
                 return .none
