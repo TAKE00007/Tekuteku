@@ -168,7 +168,7 @@ struct StepsHistoryChartView: View {
                 let frame = geometry[plotFrame]
                 let lineX = frame.minX + x
 
-                AnnotationView
+                selectionAnnotation
                     .position(
                         x: lineX,
                         y: frame.minY - 40
@@ -177,7 +177,7 @@ struct StepsHistoryChartView: View {
         }
     }
     
-    private var AnnotationView: some View {
+    private var selectionAnnotation: some View {
         VStack(alignment: .leading) {
             Text("合計")
                 .font(.caption)
