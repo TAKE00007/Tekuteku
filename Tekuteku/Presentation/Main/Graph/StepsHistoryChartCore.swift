@@ -7,17 +7,19 @@ struct StepHistoryChartFeature {
     @ObservableState
     struct State: Equatable {
         let calendar = Calendar.current
+        let locale = Locale(identifier: "ja_JP")
         let graphCategory: GraphCategory
         var records: [DailyRecord]
         
         var scrollPosition: Date
+
         var selectedDate: Date?
-        
         var selectedRecord: DailyRecord? {
             guard let selectedDate else { return nil }
             
             return records.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
         }
+
         var visibleChart: VisibleChartSummary
     }
     
@@ -25,12 +27,13 @@ struct StepHistoryChartFeature {
         let dateInterval: DateInterval
         let averageSteps: Double
         let maximumSteps: Double
-
-        let calendar = Calendar.current
-        let locale = Locale(identifier: "ja_JP")
+        let calendar: Calendar
+        let locale: Locale
         
-        init(dailyRecords: [DailyRecord], interval: DateInterval) {
+        init(dailyRecords: [DailyRecord], interval: DateInterval, calendar: Calendar, locale: Locale) {
             self.dateInterval = interval
+            self.calendar = calendar
+            self.locale = locale
             self.averageSteps = dailyRecords.isEmpty ? 0.0 : dailyRecords.reduce(0) { $0 + $1.value } / Double(dailyRecords.count)
             let defaultSteps: Double = 5000
             let rawMax = dailyRecords.map(\.value).max() ?? defaultSteps
@@ -160,6 +163,11 @@ struct StepHistoryChartFeature {
     private func updateVisibleChart(_ state: inout State, interval: DateInterval) {
         let visibleData = state.records.filter { interval.contains($0.date) }
         
-        state.visibleChart = VisibleChartSummary(dailyRecords: visibleData, interval: interval)
+        state.visibleChart = VisibleChartSummary(
+            dailyRecords: visibleData,
+            interval: interval,
+            calendar: state.calendar,
+            locale: state.locale
+        )
     }
 }

@@ -207,11 +207,10 @@ struct StepsHistoryChartView: View {
         for date: Date,
         chartProxy: ChartProxy
     ) -> CGFloat? {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
+        let startOfDay = store.calendar.startOfDay(for: date)
 
         guard
-            let nextDay = calendar.date(byAdding: .day, value: 1, to: startOfDay),
+            let nextDay = store.calendar.date(byAdding: .day, value: 1, to: startOfDay),
             let startX = chartProxy.position(forX: startOfDay),
             let endX = chartProxy.position(forX: nextDay)
         else {
@@ -230,8 +229,11 @@ struct StepsHistoryChartView: View {
                 records: MockWeeklyHistoryData.twelveWeeks,
                 scrollPosition: Date(),
                 visibleChart: StepHistoryChartFeature.VisibleChartSummary(
-                    dailyRecords: MockWeeklyHistoryData.twelveWeeks, interval: DateInterval())
-
+                    dailyRecords: MockWeeklyHistoryData.twelveWeeks,
+                    interval: DateInterval(),
+                    calendar: Calendar.current,
+                    locale: Locale(identifier: "ja_JP")
+                )
             ),
             reducer:  { StepHistoryChartFeature() }
         )
