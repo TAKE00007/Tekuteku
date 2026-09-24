@@ -18,7 +18,7 @@ struct BarGraphCommonView: View {
                         .font(.caption)
                         .foregroundStyle(.gray)
                     HStack {
-                        Text("\(Int(store.visibleGraph.averageSteps))")
+                        Text(Int(store.visibleGraph.averageSteps), format: .number)
                             .font(.largeTitle)
                         Text("歩")
                             .bold()
