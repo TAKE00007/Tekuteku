@@ -37,7 +37,7 @@ struct StepHistoryChartFeature {
             self.maximumSteps = max(defaultSteps, (rawMax / defaultSteps).rounded(.up) * defaultSteps)
         }
         
-        func displayDate() -> (startDate: String, endDate: String) {
+        func formattedDateRange() -> (startDate: String, endDate: String) {
             let startComponents = calendar.dateComponents([.year, .month], from: dateInterval.start)
             let endComponents = calendar.dateComponents([.year, .month], from: dateInterval.end)
             

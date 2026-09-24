@@ -24,7 +24,7 @@ struct StepsHistoryChartView: View {
                             .bold()
                             .foregroundStyle(.gray)
                     }
-                    let (startDate, endDate) = store.visibleChart.displayDate()
+                    let (startDate, endDate) = store.visibleChart.formattedDateRange()
                     Text("\(startDate)~ \(endDate)")
                         .foregroundStyle(.gray)
                 } else {
