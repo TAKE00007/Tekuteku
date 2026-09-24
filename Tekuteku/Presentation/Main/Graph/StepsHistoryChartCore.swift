@@ -116,7 +116,7 @@ struct StepsHistoryChartFeature {
     @Dependency(\.continuousClock) var clock
     
     private nonisolated enum CancelID: Hashable, Sendable {
-        case updateVisibleData
+        case updateVisibleSummary
     }
 
     var body: some Reducer<State, Action> {
@@ -130,7 +130,7 @@ struct StepsHistoryChartFeature {
                     await send(.updateVisibleSummary)
                 }
                 .cancellable(
-                    id: CancelID.updateVisibleData,
+                    id: CancelID.updateVisibleSummary,
                     cancelInFlight: true
                 )
             case .binding(\.selectedDate):
