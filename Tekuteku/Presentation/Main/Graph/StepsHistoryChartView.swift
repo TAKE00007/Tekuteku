@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 import ComposableArchitecture
 
-struct BarGraphCommonView: View {
+struct StepsHistoryChartView: View {
     @Bindable var store: StoreOf<BarGraphCommonFeature>
     
     @State private var chartFrame: CGRect = .zero
@@ -223,7 +223,7 @@ struct BarGraphCommonView: View {
 }
 
 #Preview {
-    BarGraphCommonView(
+    StepsHistoryChartView(
         store: Store(
             initialState: BarGraphCommonFeature.State(
                 graphCategory: .week,
