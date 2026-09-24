@@ -64,7 +64,12 @@ struct StepsHistoryChartFeature {
                 }
             }()
             
-            let endDate = dateInterval.end.formatted(endStyle)
+            let displayEnd = calendar.date(
+                byAdding: .day,
+                value: -1,
+                to: dateInterval.end
+            ) ?? dateInterval.end
+            let endDate = displayEnd.formatted(endStyle)
             
             return (startDate, endDate)
         }
