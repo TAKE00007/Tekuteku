@@ -54,6 +54,9 @@ struct BarGraphCommonView: View {
             
             Spacer()
         }
+        .onAppear {
+            store.send(.onAppear)
+        }
         .onChange(of: selectedDate) { _, newValue in
             guard let newValue else { return }
             store.send(.tapBar(selectedDate: newValue))
