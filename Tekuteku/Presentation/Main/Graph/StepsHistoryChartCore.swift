@@ -186,15 +186,10 @@ struct StepsHistoryChartFeature {
                     calendar: state.calendar
                 )
                 
-                let interval = state.graphCategory.dateInterval(
-                    containing: state.scrollPosition,
-                    calendar: state.calendar
-                )
-                updateVisibleChart(&state, interval: interval)
+                updateVisibleChart(&state)
                 return .none
             case .updateVisibleSummary:
-                let interval = state.graphCategory.dateInterval(containing: state.scrollPosition, calendar: state.calendar)
-                updateVisibleChart(&state, interval: interval)
+                updateVisibleChart(&state)
                 return .none
             case .selectionCleared:
                 state.selectedDate = nil
@@ -203,7 +198,11 @@ struct StepsHistoryChartFeature {
         }
     }
     
-    private func updateVisibleChart(_ state: inout State, interval: DateInterval) {
+    private func updateVisibleChart(_ state: inout State) {
+        let interval = state.graphCategory.dateInterval(
+            containing: state.scrollPosition,
+            calendar: state.calendar
+        )
         let visibleData = state.records.filter { interval.contains($0.date) }
         
         state.visibleChart = VisibleChartSummary(
