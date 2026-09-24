@@ -3,7 +3,7 @@ import Charts
 import ComposableArchitecture
 
 struct StepsHistoryChartView: View {
-    @Bindable var store: StoreOf<StepHistoryChartFeature>
+    @Bindable var store: StoreOf<StepsHistoryChartFeature>
     
     @State private var chartFrame: CGRect = .zero
     @State private var containerFrame: CGRect = .zero
@@ -224,18 +224,18 @@ struct StepsHistoryChartView: View {
 #Preview {
     StepsHistoryChartView(
         store: Store(
-            initialState: StepHistoryChartFeature.State(
+            initialState: StepsHistoryChartFeature.State(
                 graphCategory: .week,
                 records: MockWeeklyHistoryData.twelveWeeks,
                 scrollPosition: Date(),
-                visibleChart: StepHistoryChartFeature.VisibleChartSummary(
+                visibleChart: StepsHistoryChartFeature.VisibleChartSummary(
                     dailyRecords: MockWeeklyHistoryData.twelveWeeks,
                     interval: DateInterval(),
                     calendar: Calendar.current,
                     locale: Locale(identifier: "ja_JP")
                 )
             ),
-            reducer:  { StepHistoryChartFeature() }
+            reducer:  { StepsHistoryChartFeature() }
         )
     )
 }
