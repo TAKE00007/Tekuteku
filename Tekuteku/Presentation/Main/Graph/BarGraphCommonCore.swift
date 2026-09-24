@@ -10,7 +10,7 @@ struct BarGraphCommonFeature {
         
         let graphCategory: GraphCategory
         
-        var scrollPosition: Date = Date()
+        var scrollPosition: Date
         var selectedDate: Date?
         var data: [DailyRecord]
         
@@ -20,14 +20,16 @@ struct BarGraphCommonFeature {
     
     struct VisibleGraph: Equatable {
         let dailyRecords: [DailyRecord]
+        let displayDates: DateInterval
         let averageSteps: Double
         let maxSteps: Double
 
         let calendar = Calendar.current
         let locale = Locale(identifier: "ja_JP")
         
-        init(dailyRecords: [DailyRecord]) {
+        init(dailyRecords: [DailyRecord], interval: DateInterval) {
             self.dailyRecords = dailyRecords
+            self.displayDates = interval
             self.averageSteps = dailyRecords.isEmpty ? 0.0 : dailyRecords.reduce(0) { $0 + $1.value } / Double(dailyRecords.count)
             let defaultSteps: Double = 5000
             let rawMax = dailyRecords.map(\.value).max() ?? defaultSteps
@@ -35,15 +37,13 @@ struct BarGraphCommonFeature {
         }
         
         func displayDate() -> (startDate: String, endDate: String) {
-            let start = calendar.startOfDay(for: dailyRecords.first?.date ??  Date())
-            let startComponents = calendar.dateComponents([.year, .month], from: start)
-            let end = calendar.startOfDay(for: dailyRecords.last?.date ??  Date())
-            let endComponents = calendar.dateComponents([.year, .month], from: end)
+            let startComponents = calendar.dateComponents([.year, .month], from: displayDates.start)
+            let endComponents = calendar.dateComponents([.year, .month], from: displayDates.end)
             
             let isSameYear = startComponents.year == endComponents.year
             let isSameMonth = startComponents.month == endComponents.month
             
-            let startDate = start.formatted(.dateTime
+            let startDate = displayDates.start.formatted(.dateTime
                 .year()
                 .month()
                 .day()
@@ -60,7 +60,7 @@ struct BarGraphCommonFeature {
                 }
             }()
             
-            let endDate = end.formatted(endStyle)
+            let endDate = displayDates.end.formatted(endStyle)
             
             return (startDate, endDate)
         }
@@ -73,34 +73,30 @@ struct BarGraphCommonFeature {
         case halfYear
         case year
         
-        var visibleDays: Int {
-            switch self {
-            case .week: return 7
-            case .month: return 30
-            case .halfYear: return 180
-            case .year: return 365
-            }
-        }
-        
-        var visibleLength: Int {
-            switch self {
-            case .week: return 7 * 24 * 60 * 60
-            case .month: return 30 * 24 * 60 * 60
-            case .halfYear: return 6 * 30 * 24 * 60 * 60
-            case .year: return 12 * 30 * 24 * 60 * 60
-            }
-        }
-        
-        func endDate(from: Date, calendar: Calendar) -> Date {
+        func dateInterval(containing date: Date, calendar: Calendar) -> DateInterval {
             switch self {
             case .week:
-                return calendar.date(byAdding: .day, value: 7, to: from) ?? from
+                let start = calendar.startOfDay(for: date)
+                let end = calendar.date(
+                    byAdding: .day,
+                    value: 7,
+                    to: start
+                ) ?? start
+                
+                return DateInterval(start: start, end: end)
             case .month:
-                return calendar.date(byAdding: .month, value: 1, to: from) ?? from
+                return calendar.dateInterval(of: .month, for: date) ?? DateInterval()
             case .halfYear:
-                return calendar.date(byAdding: .month, value: 6, to: from) ?? from
+                let monthInterval = calendar.dateInterval(of: .month, for: date) ?? DateInterval()
+                let end = calendar.date(
+                    byAdding: .month,
+                    value: 6,
+                    to: monthInterval.start
+                ) ?? monthInterval.start
+
+                return DateInterval(start: monthInterval.start, end: end)
             case .year:
-                return calendar.date(byAdding: .year, value: 1, to: from) ?? from
+                return calendar.dateInterval(of: .year, for: date) ?? DateInterval()
             }
         }
     }
@@ -138,28 +134,22 @@ struct BarGraphCommonFeature {
             case .binding:
                 return .none
             case .onAppear:
-                state.data = MockWeeklyHistoryData.twelveWeeks
-                state.scrollPosition = generateScrollPosition(
-                    data: state.data,
-                    graphCategory: state.graphCategory,
+                state.data = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
+                
+                let latestDate = state.data.map(\.date).max() ?? Date()
+                let interval = state.graphCategory.dateInterval(
+                    containing: latestDate,
                     calendar: state.calendar
                 )
-                let visibleData = generateVisibleData(
-                    records: state.data,
-                    scrollPosition: state.scrollPosition,
-                    graphCategory: state.graphCategory,
-                    calendar: state.calendar
-                )
-                state.visibleGraph = VisibleGraph(dailyRecords: visibleData)
+                state.scrollPosition = interval.start
+                
+                let visibleData = state.data.filter { interval.contains($0.date) }
+                state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
                 return .none
             case .updateVisibleData:
-                let visibleData = generateVisibleData(
-                    records: state.data,
-                    scrollPosition: state.scrollPosition,
-                    graphCategory: state.graphCategory,
-                    calendar: state.calendar
-                )
-                state.visibleGraph = VisibleGraph(dailyRecords: visibleData)
+                let interval = state.graphCategory.dateInterval(containing: state.scrollPosition, calendar: state.calendar)
+                let visibleData = state.data.filter { interval.contains($0.date) }
+                state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
                 return .none
             case .tapBar(let selectedDate):
                 state.selectedData = state.data.first {
@@ -167,39 +157,6 @@ struct BarGraphCommonFeature {
                 }
                 return .none
             }
-        }
-    }
-    
-    private func generateScrollPosition(data: [DailyRecord], graphCategory: GraphCategory, calendar: Calendar) -> Date {
-        let lastDate = data.last?.date ?? Date()
-        
-        switch graphCategory {
-        case .week:
-            return calendar.date(byAdding: .day, value: -7, to: lastDate) ?? lastDate
-        case .month:
-            return calendar.date(byAdding: .month, value: -1, to: lastDate) ?? lastDate
-        case .halfYear:
-            return calendar.date(byAdding: .month, value: -6, to: lastDate) ?? lastDate
-        case .year:
-            return calendar.date(byAdding: .year, value: -1, to: lastDate) ?? lastDate
-        }
-    }
-    
-    private func generateVisibleData(records: [DailyRecord], scrollPosition: Date, graphCategory: GraphCategory, calendar: Calendar) -> [DailyRecord] {
-        let start = calendar.startOfDay(for: scrollPosition)
-        let end = switch graphCategory {
-        case .week:
-            calendar.date(byAdding: .day, value: 7, to: start) ?? start
-        case .month:
-            calendar.date(byAdding: .month, value: 1, to: start) ?? start
-        case .halfYear:
-            calendar.date(byAdding: .month, value: 6, to: start) ?? start
-        case .year:
-            calendar.date(byAdding: .year, value: 1, to: start) ?? start
-        }
-        
-        return records.filter { data in
-            start <= data.date && data.date < end
         }
     }
 }

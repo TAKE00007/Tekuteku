@@ -98,7 +98,7 @@ struct BarGraphCommonView: View {
         }
         .chartScrollPosition(x: $store.scrollPosition)
         .chartScrollableAxes(.horizontal)
-        .chartXVisibleDomain(length: store.graphCategory.visibleLength)
+        .chartXVisibleDomain(length: store.visibleGraph.displayDates.duration)
         .chartXSelection(value: $selectedDate)
         .chartXAxis {
             AxisMarks(values: .stride(by: .month)) { _ in
@@ -234,8 +234,10 @@ struct BarGraphCommonView: View {
         store: Store(
             initialState: BarGraphCommonFeature.State(
                 graphCategory: .week,
+                scrollPosition: Date(),
                 data: MockWeeklyHistoryData.twelveWeeks,
-                visibleGraph: BarGraphCommonFeature.VisibleGraph(dailyRecords: MockWeeklyHistoryData.twelveWeeks)
+                visibleGraph: BarGraphCommonFeature.VisibleGraph(
+                    dailyRecords: MockWeeklyHistoryData.twelveWeeks, interval: DateInterval())
 
             ),
             reducer:  { BarGraphCommonFeature() }
