@@ -18,13 +18,13 @@ struct StepsHistoryChartView: View {
                         .font(.caption)
                         .foregroundStyle(.gray)
                     HStack {
-                        Text(Int(store.visibleGraph.averageSteps), format: .number)
+                        Text(Int(store.visibleChart.averageSteps), format: .number)
                             .font(.largeTitle)
                         Text("歩")
                             .bold()
                             .foregroundStyle(.gray)
                     }
-                    let (startDate, endDate) = store.visibleGraph.displayDate()
+                    let (startDate, endDate) = store.visibleChart.displayDate()
                     Text("\(startDate)~ \(endDate)")
                         .foregroundStyle(.gray)
                 } else {
@@ -92,7 +92,7 @@ struct StepsHistoryChartView: View {
         .chartXSelection(value: $store.selectedDate)
         .chartScrollPosition(x: $store.scrollPosition)
         .chartScrollableAxes(.horizontal)
-        .chartXVisibleDomain(length: store.visibleGraph.displayDates.duration)
+        .chartXVisibleDomain(length: store.visibleChart.displayDates.duration)
         .chartXAxis {
             AxisMarks(values: .stride(by: .month)) { _ in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
@@ -107,14 +107,14 @@ struct StepsHistoryChartView: View {
                 }
             }
         }
-        .chartYScale(domain: 0...store.visibleGraph.maximumSteps)
+        .chartYScale(domain: 0...store.visibleChart.maximumSteps)
         .chartYAxis {
             AxisMarks(
                 position: .trailing,
                 values: [
                     0,
-                    store.visibleGraph.maximumSteps / 2,
-                    store.visibleGraph.maximumSteps
+                    store.visibleChart.maximumSteps / 2,
+                    store.visibleChart.maximumSteps
                 ]
             ) {
                 AxisGridLine()
@@ -229,7 +229,7 @@ struct StepsHistoryChartView: View {
                 graphCategory: .week,
                 data: MockWeeklyHistoryData.twelveWeeks,
                 scrollPosition: Date(),
-                visibleGraph: StepHistoryChartFeature.VisibleGraph(
+                visibleChart: StepHistoryChartFeature.VisibleChartSummary(
                     dailyRecords: MockWeeklyHistoryData.twelveWeeks, interval: DateInterval())
 
             ),

@@ -18,10 +18,10 @@ struct StepHistoryChartFeature {
             
             return data.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
         }
-        var visibleGraph: VisibleGraph
+        var visibleChart: VisibleChartSummary
     }
     
-    struct VisibleGraph: Equatable {
+    struct VisibleChartSummary: Equatable {
         let displayDates: DateInterval
         let averageSteps: Double
         let maximumSteps: Double
@@ -160,6 +160,6 @@ struct StepHistoryChartFeature {
     private func updateVisibleChart(_ state: inout State, interval: DateInterval) {
         let visibleData = state.data.filter { interval.contains($0.date) }
         
-        state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
+        state.visibleChart = VisibleChartSummary(dailyRecords: visibleData, interval: interval)
     }
 }
