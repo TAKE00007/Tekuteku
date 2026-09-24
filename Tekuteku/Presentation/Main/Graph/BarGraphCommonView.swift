@@ -52,8 +52,8 @@ struct BarGraphCommonView: View {
             
             Spacer()
         }
-        .onAppear {
-            store.send(.onAppear)
+        .task {
+            store.send(.task)
         }
         .background {
             GeometryReader { geometry in

@@ -22,7 +22,6 @@ struct BarGraphCommonFeature {
     }
     
     struct VisibleGraph: Equatable {
-        let dailyRecords: [DailyRecord]
         let displayDates: DateInterval
         let averageSteps: Double
         let maxSteps: Double
@@ -31,7 +30,6 @@ struct BarGraphCommonFeature {
         let locale = Locale(identifier: "ja_JP")
         
         init(dailyRecords: [DailyRecord], interval: DateInterval) {
-            self.dailyRecords = dailyRecords
             self.displayDates = interval
             self.averageSteps = dailyRecords.isEmpty ? 0.0 : dailyRecords.reduce(0) { $0 + $1.value } / Double(dailyRecords.count)
             let defaultSteps: Double = 5000
@@ -107,7 +105,7 @@ struct BarGraphCommonFeature {
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         
-        case onAppear
+        case task
         case updateVisibleData
         case selectionCleared
     }
@@ -136,7 +134,7 @@ struct BarGraphCommonFeature {
                 return .none
             case .binding:
                 return .none
-            case .onAppear:
+            case .task:
                 state.data = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
                 
                 let latestDate = state.data.map(\.date).max() ?? Date()
