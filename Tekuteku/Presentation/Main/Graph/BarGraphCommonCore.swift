@@ -7,13 +7,10 @@ struct BarGraphCommonFeature {
     @ObservableState
     struct State: Equatable {
         let calendar = Calendar.current
-        
         let graphCategory: GraphCategory
-        
-        var scrollPosition: Date
-        var selectedDate: Date?
         var data: [DailyRecord]
         
+        var scrollPosition: Date
         var selectedData: DailyRecord?
         var visibleGraph: VisibleGraph
     }

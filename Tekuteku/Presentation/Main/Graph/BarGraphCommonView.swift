@@ -234,8 +234,8 @@ struct BarGraphCommonView: View {
         store: Store(
             initialState: BarGraphCommonFeature.State(
                 graphCategory: .month,
-                scrollPosition: Date(),
                 data: MockWeeklyHistoryData.twelveWeeks,
+                scrollPosition: Date(),
                 visibleGraph: BarGraphCommonFeature.VisibleGraph(
                     dailyRecords: MockWeeklyHistoryData.twelveWeeks, interval: DateInterval())
 
