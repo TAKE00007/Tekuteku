@@ -8,7 +8,7 @@ struct StepHistoryChartFeature {
     struct State: Equatable {
         let calendar = Calendar.current
         let graphCategory: GraphCategory
-        var data: [DailyRecord]
+        var records: [DailyRecord]
         
         var scrollPosition: Date
         var selectedDate: Date?
@@ -16,7 +16,7 @@ struct StepHistoryChartFeature {
         var selectedRecord: DailyRecord? {
             guard let selectedDate else { return nil }
             
-            return data.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
+            return records.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
         }
         var visibleChart: VisibleChartSummary
     }
@@ -135,9 +135,9 @@ struct StepHistoryChartFeature {
             case .binding:
                 return .none
             case .task:
-                state.data = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
+                state.records = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
                 
-                let latestDate = state.data.map(\.date).max() ?? Date()
+                let latestDate = state.records.map(\.date).max() ?? Date()
                 let interval = state.graphCategory.dateInterval(
                     containing: latestDate,
                     calendar: state.calendar
@@ -158,7 +158,7 @@ struct StepHistoryChartFeature {
     }
     
     private func updateVisibleChart(_ state: inout State, interval: DateInterval) {
-        let visibleData = state.data.filter { interval.contains($0.date) }
+        let visibleData = state.records.filter { interval.contains($0.date) }
         
         state.visibleChart = VisibleChartSummary(dailyRecords: visibleData, interval: interval)
     }

@@ -83,7 +83,7 @@ struct StepsHistoryChartView: View {
     }
     
     private var chartContent: some View {
-        Chart(store.data) { data in
+        Chart(store.records) { data in
             BarMark(
                 x: .value("Day", data.date, unit: .day),
                 y: .value("Step", data.value)
@@ -227,7 +227,7 @@ struct StepsHistoryChartView: View {
         store: Store(
             initialState: StepHistoryChartFeature.State(
                 graphCategory: .week,
-                data: MockWeeklyHistoryData.twelveWeeks,
+                records: MockWeeklyHistoryData.twelveWeeks,
                 scrollPosition: Date(),
                 visibleChart: StepHistoryChartFeature.VisibleChartSummary(
                     dailyRecords: MockWeeklyHistoryData.twelveWeeks, interval: DateInterval())
