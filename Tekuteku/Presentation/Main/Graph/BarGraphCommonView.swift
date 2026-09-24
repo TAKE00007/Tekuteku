@@ -77,8 +77,7 @@ struct BarGraphCommonView: View {
                     
                     guard chartFrame != .zero else { return }
                     guard !chartFrame.contains(globalLocation) else { return }
-                    
-                    store.selectedDate = nil
+                    store.send(.selectionCleared)
                 }
         )
     }

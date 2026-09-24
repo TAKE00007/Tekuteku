@@ -109,6 +109,7 @@ struct BarGraphCommonFeature {
         
         case onAppear
         case updateVisibleData
+        case selectionCleared
     }
 
     @Dependency(\.continuousClock) var clock
@@ -152,6 +153,9 @@ struct BarGraphCommonFeature {
                 let interval = state.graphCategory.dateInterval(containing: state.scrollPosition, calendar: state.calendar)
                 let visibleData = state.data.filter { interval.contains($0.date) }
                 state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
+                return .none
+            case .selectionCleared:
+                state.selectedDate = nil
                 return .none
             }
         }
