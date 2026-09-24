@@ -3,7 +3,7 @@ import ComposableArchitecture
 import Observation
 
 @Reducer
-struct BarGraphCommonFeature {
+struct StepHistoryChartFeature {
     @ObservableState
     struct State: Equatable {
         let calendar = Calendar.current
