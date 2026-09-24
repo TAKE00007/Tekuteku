@@ -162,13 +162,9 @@ struct BarGraphCommonFeature {
                 state.visibleGraph = VisibleGraph(dailyRecords: visibleData)
                 return .none
             case .tapBar(let selectedDate):
-                let data = state.data
-                let closet = data.min(
-                    by: {
-                        abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate))
-                    }
-                )
-                state.selectedData = closet
+                state.selectedData = state.data.first {
+                    state.calendar.isDate($0.date, inSameDayAs: selectedDate)
+                }
                 return .none
             }
         }
