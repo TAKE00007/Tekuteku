@@ -233,7 +233,7 @@ struct BarGraphCommonView: View {
     BarGraphCommonView(
         store: Store(
             initialState: BarGraphCommonFeature.State(
-                graphCategory: .week,
+                graphCategory: .month,
                 scrollPosition: Date(),
                 data: MockWeeklyHistoryData.twelveWeeks,
                 visibleGraph: BarGraphCommonFeature.VisibleGraph(

@@ -85,18 +85,18 @@ struct BarGraphCommonFeature {
                 
                 return DateInterval(start: start, end: end)
             case .month:
-                return calendar.dateInterval(of: .month, for: date) ?? DateInterval()
+                let start = calendar.startOfDay(for: date)
+                let end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
+                return DateInterval(start: start, end: end)
             case .halfYear:
-                let monthInterval = calendar.dateInterval(of: .month, for: date) ?? DateInterval()
-                let end = calendar.date(
-                    byAdding: .month,
-                    value: 6,
-                    to: monthInterval.start
-                ) ?? monthInterval.start
-
-                return DateInterval(start: monthInterval.start, end: end)
+                let start = calendar.startOfDay(for: date)
+                let end = calendar.date(byAdding: .month, value: 6, to: start) ?? start
+                return DateInterval(start: start, end: end)
             case .year:
-                return calendar.dateInterval(of: .year, for: date) ?? DateInterval()
+                let start = calendar.startOfDay(for: date)
+                let end = calendar.date(byAdding: .year, value: 1, to: start) ?? start
+                return DateInterval(start: start, end: end)
+
             }
         }
     }
