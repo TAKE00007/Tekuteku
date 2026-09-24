@@ -92,7 +92,7 @@ struct StepsHistoryChartView: View {
         .chartXSelection(value: $store.selectedDate)
         .chartScrollPosition(x: $store.scrollPosition)
         .chartScrollableAxes(.horizontal)
-        .chartXVisibleDomain(length: store.visibleChart.displayDates.duration)
+        .chartXVisibleDomain(length: store.visibleChart.dateInterval.duration)
         .chartXAxis {
             AxisMarks(values: .stride(by: .month)) { _ in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))

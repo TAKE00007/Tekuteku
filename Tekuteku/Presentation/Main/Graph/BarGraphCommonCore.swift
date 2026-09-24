@@ -22,7 +22,7 @@ struct StepHistoryChartFeature {
     }
     
     struct VisibleChartSummary: Equatable {
-        let displayDates: DateInterval
+        let dateInterval: DateInterval
         let averageSteps: Double
         let maximumSteps: Double
 
@@ -30,7 +30,7 @@ struct StepHistoryChartFeature {
         let locale = Locale(identifier: "ja_JP")
         
         init(dailyRecords: [DailyRecord], interval: DateInterval) {
-            self.displayDates = interval
+            self.dateInterval = interval
             self.averageSteps = dailyRecords.isEmpty ? 0.0 : dailyRecords.reduce(0) { $0 + $1.value } / Double(dailyRecords.count)
             let defaultSteps: Double = 5000
             let rawMax = dailyRecords.map(\.value).max() ?? defaultSteps
@@ -38,13 +38,13 @@ struct StepHistoryChartFeature {
         }
         
         func displayDate() -> (startDate: String, endDate: String) {
-            let startComponents = calendar.dateComponents([.year, .month], from: displayDates.start)
-            let endComponents = calendar.dateComponents([.year, .month], from: displayDates.end)
+            let startComponents = calendar.dateComponents([.year, .month], from: dateInterval.start)
+            let endComponents = calendar.dateComponents([.year, .month], from: dateInterval.end)
             
             let isSameYear = startComponents.year == endComponents.year
             let isSameMonth = startComponents.month == endComponents.month
             
-            let startDate = displayDates.start.formatted(.dateTime
+            let startDate = dateInterval.start.formatted(.dateTime
                 .year()
                 .month()
                 .day()
@@ -61,7 +61,7 @@ struct StepHistoryChartFeature {
                 }
             }()
             
-            let endDate = displayDates.end.formatted(endStyle)
+            let endDate = dateInterval.end.formatted(endStyle)
             
             return (startDate, endDate)
         }
