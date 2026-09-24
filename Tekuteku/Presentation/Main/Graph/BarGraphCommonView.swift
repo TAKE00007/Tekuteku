@@ -96,10 +96,10 @@ struct BarGraphCommonView: View {
                 y: .value("Step", data.value)
             )
         }
+        .chartXSelection(value: $selectedDate)
         .chartScrollPosition(x: $store.scrollPosition)
         .chartScrollableAxes(.horizontal)
         .chartXVisibleDomain(length: store.visibleGraph.displayDates.duration)
-        .chartXSelection(value: $selectedDate)
         .chartXAxis {
             AxisMarks(values: .stride(by: .month)) { _ in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
