@@ -7,15 +7,13 @@ struct BarGraphCommonView: View {
     
     @State private var chartFrame: CGRect = .zero
     @State private var containerFrame: CGRect = .zero
-
-    @State private var selectedDate: Date? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Spacer()
             
             VStack(alignment: .leading) {
-                if selectedDate == nil {
+                if store.selectedDate == nil {
                     Text("平均")
                         .font(.caption)
                         .foregroundStyle(.gray)
@@ -57,10 +55,6 @@ struct BarGraphCommonView: View {
         .onAppear {
             store.send(.onAppear)
         }
-        .onChange(of: selectedDate) { _, newValue in
-            guard let newValue else { return }
-            store.send(.tapBar(selectedDate: newValue))
-        }
         .background {
             GeometryReader { geometry in
                 Color.clear
@@ -84,7 +78,7 @@ struct BarGraphCommonView: View {
                     guard chartFrame != .zero else { return }
                     guard !chartFrame.contains(globalLocation) else { return }
                     
-                    selectedDate = nil
+                    store.selectedDate = nil
                 }
         )
     }
@@ -96,7 +90,7 @@ struct BarGraphCommonView: View {
                 y: .value("Step", data.value)
             )
         }
-        .chartXSelection(value: $selectedDate)
+        .chartXSelection(value: $store.selectedDate)
         .chartScrollPosition(x: $store.scrollPosition)
         .chartScrollableAxes(.horizontal)
         .chartXVisibleDomain(length: store.visibleGraph.displayDates.duration)
@@ -150,7 +144,7 @@ struct BarGraphCommonView: View {
     
     private func selectionBackground(chartProxy: ChartProxy) -> some View {
         GeometryReader { geometry in
-            if let selectedDate = selectedDate,
+            if let selectedDate = store.selectedDate,
                let plotFrame = chartProxy.plotFrame,
                let x = centerX(for: selectedDate, chartProxy: chartProxy) {
                 let frame = geometry[plotFrame]
@@ -169,7 +163,7 @@ struct BarGraphCommonView: View {
 
     private func selectionOverlay(chartProxy: ChartProxy) -> some View {
         GeometryReader { geometry in
-            if let selectedDate = selectedDate,
+            if let selectedDate = store.selectedDate,
                let plotFrame = chartProxy.plotFrame,
                let x = centerX(for: selectedDate, chartProxy: chartProxy) {
                 let frame = geometry[plotFrame]
@@ -190,7 +184,7 @@ struct BarGraphCommonView: View {
                 .font(.caption)
                 .foregroundStyle(.gray)
             HStack(alignment: .lastTextBaseline) {
-                let step = Int(store.selectedData?.value ?? 0.0)
+                let step = Int(store.selectedRecord?.value ?? 0.0)
                 Text("\(step)")
                     .font(.title2)
                 Text("歩")
@@ -198,7 +192,7 @@ struct BarGraphCommonView: View {
             }
             .bold()
             
-            if let selectedDate = selectedDate {
+            if let selectedDate = store.selectedDate {
                 Text(selectedDate, format: Date.FormatStyle(date: .numeric, time: .none))
                     .font(.caption)
                     .foregroundStyle(.gray)
@@ -233,7 +227,7 @@ struct BarGraphCommonView: View {
     BarGraphCommonView(
         store: Store(
             initialState: BarGraphCommonFeature.State(
-                graphCategory: .month,
+                graphCategory: .week,
                 data: MockWeeklyHistoryData.twelveWeeks,
                 scrollPosition: Date(),
                 visibleGraph: BarGraphCommonFeature.VisibleGraph(

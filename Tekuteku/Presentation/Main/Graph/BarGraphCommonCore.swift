@@ -11,7 +11,13 @@ struct BarGraphCommonFeature {
         var data: [DailyRecord]
         
         var scrollPosition: Date
-        var selectedData: DailyRecord?
+        var selectedDate: Date?
+        
+        var selectedRecord: DailyRecord? {
+            guard let selectedDate else { return nil }
+            
+            return data.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
+        }
         var visibleGraph: VisibleGraph
     }
     
@@ -103,9 +109,6 @@ struct BarGraphCommonFeature {
         
         case onAppear
         case updateVisibleData
-        
-        case tapBar(selectedDate: Date)
-        
     }
 
     @Dependency(\.continuousClock) var clock
@@ -128,6 +131,8 @@ struct BarGraphCommonFeature {
                     id: CancelID.updateVisibleData,
                     cancelInFlight: true
                 )
+            case .binding(\.selectedDate):
+                return .none
             case .binding:
                 return .none
             case .onAppear:
@@ -147,11 +152,6 @@ struct BarGraphCommonFeature {
                 let interval = state.graphCategory.dateInterval(containing: state.scrollPosition, calendar: state.calendar)
                 let visibleData = state.data.filter { interval.contains($0.date) }
                 state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
-                return .none
-            case .tapBar(let selectedDate):
-                state.selectedData = state.data.first {
-                    state.calendar.isDate($0.date, inSameDayAs: selectedDate)
-                }
                 return .none
             }
         }
