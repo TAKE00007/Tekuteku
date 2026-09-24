@@ -24,7 +24,7 @@ struct BarGraphCommonFeature {
     struct VisibleGraph: Equatable {
         let displayDates: DateInterval
         let averageSteps: Double
-        let maxSteps: Double
+        let maximumSteps: Double
 
         let calendar = Calendar.current
         let locale = Locale(identifier: "ja_JP")
@@ -34,7 +34,7 @@ struct BarGraphCommonFeature {
             self.averageSteps = dailyRecords.isEmpty ? 0.0 : dailyRecords.reduce(0) { $0 + $1.value } / Double(dailyRecords.count)
             let defaultSteps: Double = 5000
             let rawMax = dailyRecords.map(\.value).max() ?? defaultSteps
-            self.maxSteps = max(defaultSteps, (rawMax / defaultSteps).rounded(.up) * defaultSteps)
+            self.maximumSteps = max(defaultSteps, (rawMax / defaultSteps).rounded(.up) * defaultSteps)
         }
         
         func displayDate() -> (startDate: String, endDate: String) {

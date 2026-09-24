@@ -107,14 +107,14 @@ struct BarGraphCommonView: View {
                 }
             }
         }
-        .chartYScale(domain: 0...store.visibleGraph.maxSteps)
+        .chartYScale(domain: 0...store.visibleGraph.maximumSteps)
         .chartYAxis {
             AxisMarks(
                 position: .trailing,
                 values: [
                     0,
-                    store.visibleGraph.maxSteps / 2,
-                    store.visibleGraph.maxSteps
+                    store.visibleGraph.maximumSteps / 2,
+                    store.visibleGraph.maximumSteps
                 ]
             ) {
                 AxisGridLine()
