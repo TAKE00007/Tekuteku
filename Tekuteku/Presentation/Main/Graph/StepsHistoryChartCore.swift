@@ -108,6 +108,41 @@ struct StepsHistoryChartFeature {
 
             }
         }
+        
+        func initialScrollPosition(
+            latestDate: Date,
+            calendar: Calendar
+        ) ->  Date {
+            let latestDay = calendar.startOfDay(for: latestDate)
+            
+            switch self {
+            case .week:
+                return calendar.date(
+                    byAdding: .day,
+                    value: -6,
+                    to: latestDay
+                ) ?? latestDay
+            case .month:
+                return calendar.date(
+                    byAdding: .day,
+                    value: -29,
+                    to: latestDay
+                ) ?? latestDay
+            case .halfYear:
+                return calendar.date(
+                    byAdding: .month,
+                    value: -6,
+                    to: latestDay
+                ) ?? latestDay
+            case .year:
+                return calendar.date(
+                    byAdding: .year,
+                    value: -1,
+                    to: latestDay
+                ) ?? latestDay
+
+            }
+        }
     }
     
     enum Action: BindableAction {
@@ -146,12 +181,15 @@ struct StepsHistoryChartFeature {
                 state.records = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
                 
                 let latestDate = state.records.map(\.date).max() ?? Date()
-                let interval = state.graphCategory.dateInterval(
-                    containing: latestDate,
+                state.scrollPosition = state.graphCategory.initialScrollPosition(
+                    latestDate: latestDate,
                     calendar: state.calendar
                 )
-                state.scrollPosition = interval.start
                 
+                let interval = state.graphCategory.dateInterval(
+                    containing: state.scrollPosition,
+                    calendar: state.calendar
+                )
                 updateVisibleChart(&state, interval: interval)
                 return .none
             case .updateVisibleSummary:
