@@ -146,18 +146,22 @@ struct BarGraphCommonFeature {
                 )
                 state.scrollPosition = interval.start
                 
-                let visibleData = state.data.filter { interval.contains($0.date) }
-                state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
+                updateVisibleChart(&state, interval: interval)
                 return .none
             case .updateVisibleData:
                 let interval = state.graphCategory.dateInterval(containing: state.scrollPosition, calendar: state.calendar)
-                let visibleData = state.data.filter { interval.contains($0.date) }
-                state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
+                updateVisibleChart(&state, interval: interval)
                 return .none
             case .selectionCleared:
                 state.selectedDate = nil
                 return .none
             }
         }
+    }
+    
+    private func updateVisibleChart(_ state: inout State, interval: DateInterval) {
+        let visibleData = state.data.filter { interval.contains($0.date) }
+        
+        state.visibleGraph = VisibleGraph(dailyRecords: visibleData, interval: interval)
     }
 }
