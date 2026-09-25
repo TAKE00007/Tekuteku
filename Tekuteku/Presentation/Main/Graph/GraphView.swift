@@ -42,7 +42,12 @@ struct GraphView: View {
                     )
                 )
             case .month:
-                MonthGraphView()
+                StepsHistoryChartView(
+                    store: store.scope(
+                        state: \.monthChart,
+                        action: \.monthChart
+                    )
+                )
             case .halfYear:
                 GraphPage(title: "6か月")
             case .year:
