@@ -6,12 +6,16 @@ import Observation
 struct StepsHistoryChartFeature {
     @ObservableState
     struct State: Equatable {
-        let calendar = Calendar.current
-        let locale = Locale(identifier: "ja_JP")
-        let graphCategory: GraphCategory
-        var records: [DailyRecord]
+        var hasLoaded = false
         
-        var scrollPosition: Date
+        let calendar: Calendar
+        let locale: Locale
+        let graphCategory: GraphCategory
+        
+        var records: [DailyRecord] = []
+        var visibleChart: VisibleChartSummary
+
+        var scrollPosition: Date = Date()
 
         var selectedDate: Date?
         var selectedRecord: DailyRecord? {
@@ -20,8 +24,23 @@ struct StepsHistoryChartFeature {
             return records.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
         }
 
-        var visibleChart: VisibleChartSummary
+        init(
+            graphCategory: GraphCategory,
+            calendar: Calendar = .current,
+            locale: Locale = Locale(identifier: "ja_JP")
+        ) {
+            self.graphCategory = graphCategory
+            self.calendar = calendar
+            self.locale = locale
+            self.visibleChart = VisibleChartSummary(
+                dailyRecords: [],
+                interval: DateInterval(),
+                calendar: calendar,
+                locale: locale
+            )
+        }
     }
+    
     
     struct VisibleChartSummary: Equatable {
         let dateInterval: DateInterval
@@ -166,7 +185,7 @@ struct StepsHistoryChartFeature {
             switch action {
             case .binding(\.scrollPosition):
                 return .run { send in
-                    try await clock.sleep(for: .milliseconds(20)) // TODO: 後で調整する
+                    try await clock.sleep(for: .milliseconds(150)) // TODO: 後で調整する
                     await send(.updateVisibleSummary)
                 }
                 .cancellable(
@@ -178,6 +197,8 @@ struct StepsHistoryChartFeature {
             case .binding:
                 return .none
             case .task:
+                guard !state.hasLoaded else { return .none }
+                defer { state.hasLoaded = true }
                 state.records = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
                 
                 let latestDate = state.records.map(\.date).max() ?? Date()
