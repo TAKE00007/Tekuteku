@@ -183,7 +183,7 @@ struct StepsHistoryChartFeature {
             switch action {
             case .binding(\.scrollPosition):
                 return .run { send in
-                    try await clock.sleep(for: .milliseconds(200)) // TODO: 後で調整する
+                    try await clock.sleep(for: .milliseconds(150)) // TODO: 後で調整する
                     await send(.updateVisibleSummary)
                 }
                 .cancellable(
