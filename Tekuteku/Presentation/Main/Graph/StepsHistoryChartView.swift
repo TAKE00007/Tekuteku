@@ -89,6 +89,9 @@ struct StepsHistoryChartView: View {
                 y: .value("Step", data.value)
             )
         }
+        .chartScrollTargetBehavior(
+            .valueAligned(matching: DateComponents(hour: 0))
+        )
         .chartXSelection(value: $store.selectedDate)
         .chartScrollPosition(x: $store.scrollPosition)
         .chartScrollableAxes(.horizontal)
