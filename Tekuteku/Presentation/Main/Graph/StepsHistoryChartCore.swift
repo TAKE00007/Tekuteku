@@ -6,6 +6,8 @@ import Observation
 struct StepsHistoryChartFeature {
     @ObservableState
     struct State: Equatable {
+        var hasLoaded = false
+        
         let calendar: Calendar
         let locale: Locale
         let graphCategory: GraphCategory
@@ -195,6 +197,8 @@ struct StepsHistoryChartFeature {
             case .binding:
                 return .none
             case .task:
+                guard !state.hasLoaded else { return .none }
+                defer { state.hasLoaded = true }
                 state.records = MockWeeklyHistoryData.twelveWeeks // TODO: HealthKitから読み込む
                 
                 let latestDate = state.records.map(\.date).max() ?? Date()
