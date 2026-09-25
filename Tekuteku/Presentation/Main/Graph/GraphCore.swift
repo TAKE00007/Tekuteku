@@ -10,17 +10,22 @@ struct GraphFeature {
         var healthData: [HealthData] = []
         var isLoading = false
         var weekChart = StepsHistoryChartFeature.State(graphCategory: .week)
+        var monthChart = StepsHistoryChartFeature.State(graphCategory: .month)
     }
     
     enum Action {
         case onAppear
         case healthDataResponse(Result<[HealthData], HealthKitError>)
         case weekChart(StepsHistoryChartFeature.Action)
+        case monthChart(StepsHistoryChartFeature.Action)
     }
     @Dependency(\.healthDataServiceClient) var healthDataService
     
     var body: some Reducer<State, Action> {
         Scope(state: \.weekChart, action: \.weekChart) {
+            StepsHistoryChartFeature()
+        }
+        Scope(state: \.monthChart, action: \.monthChart) {
             StepsHistoryChartFeature()
         }
         Reduce { state, action in
@@ -48,7 +53,7 @@ struct GraphFeature {
                 state.healthData = []
                 state.statusMessage = error.message
                 return .none
-            case .weekChart:
+            case .weekChart, .monthChart:
                 return .none
             }
         }
