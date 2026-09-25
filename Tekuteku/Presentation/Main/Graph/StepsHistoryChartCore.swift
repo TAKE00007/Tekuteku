@@ -6,12 +6,14 @@ import Observation
 struct StepsHistoryChartFeature {
     @ObservableState
     struct State: Equatable {
-        let calendar = Calendar.current
-        let locale = Locale(identifier: "ja_JP")
+        let calendar: Calendar
+        let locale: Locale
         let graphCategory: GraphCategory
-        var records: [DailyRecord]
         
-        var scrollPosition: Date
+        var records: [DailyRecord] = []
+        var visibleChart: VisibleChartSummary
+
+        var scrollPosition: Date = Date()
 
         var selectedDate: Date?
         var selectedRecord: DailyRecord? {
@@ -20,8 +22,23 @@ struct StepsHistoryChartFeature {
             return records.first { calendar.isDate($0.date, inSameDayAs: selectedDate) }
         }
 
-        var visibleChart: VisibleChartSummary
+        init(
+            graphCategory: GraphCategory,
+            calendar: Calendar = .current,
+            locale: Locale = Locale(identifier: "ja_JP")
+        ) {
+            self.graphCategory = graphCategory
+            self.calendar = calendar
+            self.locale = locale
+            self.visibleChart = VisibleChartSummary(
+                dailyRecords: [],
+                interval: DateInterval(),
+                calendar: calendar,
+                locale: locale
+            )
+        }
     }
+    
     
     struct VisibleChartSummary: Equatable {
         let dateInterval: DateInterval

@@ -270,15 +270,7 @@ private extension StepsHistoryChartView {
     StepsHistoryChartView(
         store: Store(
             initialState: StepsHistoryChartFeature.State(
-                graphCategory: .week,
-                records: MockWeeklyHistoryData.twelveWeeks,
-                scrollPosition: Date(),
-                visibleChart: StepsHistoryChartFeature.VisibleChartSummary(
-                    dailyRecords: MockWeeklyHistoryData.twelveWeeks,
-                    interval: DateInterval(),
-                    calendar: Calendar.current,
-                    locale: Locale(identifier: "ja_JP")
-                )
+                graphCategory: .week
             ),
             reducer:  { StepsHistoryChartFeature() }
         )
