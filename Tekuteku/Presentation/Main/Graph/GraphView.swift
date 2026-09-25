@@ -31,24 +31,23 @@ struct GraphView: View {
             .pickerStyle(.segmented)
             .padding(16)
             
-            TabView(selection: $selection) {
+            switch selection {
+            case .day:
                 DayGraphView(isActive: selection == .day)
-                    .tag(TopTab.day)
+            case .week:
                 StepsHistoryChartView(
                     store: store.scope(
                         state: \.weekChart,
                         action: \.weekChart
                     )
                 )
-                    .tag(TopTab.week)
+            case .month:
                 MonthGraphView()
-                    .tag(TopTab.month)
+            case .halfYear:
                 GraphPage(title: "6か月")
-                    .tag(TopTab.halfYear)
+            case .year:
                 GraphPage(title: "年")
-                    .tag(TopTab.year)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
             
             if store.isLoading {
                 ProgressView()
