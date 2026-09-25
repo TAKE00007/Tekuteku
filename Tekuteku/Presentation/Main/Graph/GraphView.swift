@@ -34,7 +34,12 @@ struct GraphView: View {
             TabView(selection: $selection) {
                 DayGraphView(isActive: selection == .day)
                     .tag(TopTab.day)
-                WeekGraphView()
+                StepsHistoryChartView(
+                    store: store.scope(
+                        state: \.weekChart,
+                        action: \.weekChart
+                    )
+                )
                     .tag(TopTab.week)
                 MonthGraphView()
                     .tag(TopTab.month)
